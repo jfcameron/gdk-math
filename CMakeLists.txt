@@ -2,6 +2,10 @@
 
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/jfc-cmake/jfclib.cmake")
+
+add_subdirectory(thirdparty)
+
 jfc_project(library
     NAME "gdkmath"
     VERSION 0.0
