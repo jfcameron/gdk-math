@@ -1,2 +1,0 @@
-/usr/bin/ar qc libgdkmath.a  CMakeFiles/gdkmath.dir/src/intvector2.cpp.o CMakeFiles/gdkmath.dir/src/mat4x4.cpp.o CMakeFiles/gdkmath.dir/src/quaternion.cpp.o CMakeFiles/gdkmath.dir/src/vector2.cpp.o CMakeFiles/gdkmath.dir/src/vector3.cpp.o CMakeFiles/gdkmath.dir/src/vector4.cpp.o
-/usr/bin/ranlib libgdkmath.a

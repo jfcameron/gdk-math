@@ -28,7 +28,7 @@ jfc_project(library
         ${nlohmann_INCLUDE_DIR}
 
     SOURCE_LIST
-        #${CMAKE_CURRENT_SOURCE_DIR}/src/intvector2.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/intvector2.cpp
         #${CMAKE_CURRENT_SOURCE_DIR}/src/mat4x4.cpp
         #${CMAKE_CURRENT_SOURCE_DIR}/src/quaternion.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vector2.cpp
