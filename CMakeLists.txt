@@ -4,6 +4,10 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/jfc-cmake/jfclib.cmake")
 
+option(JFC_BUILD_APP    "Build the app" ON)
+option(JFC_BUILD_DOCS   "Build documentation" OFF)
+option(JFC_BUILD_TESTS  "Build unit tests" ON)
+
 add_subdirectory(thirdparty)
 
 jfc_project(library
@@ -24,22 +28,18 @@ jfc_project(library
         ${nlohmann_INCLUDE_DIR}
 
     SOURCE_LIST
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/intvector2.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/mat4x4.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/quaternion.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/intvector2.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/mat4x4.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/quaternion.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vector2.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/vector3.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/vector4.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/vector3.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/vector4.cpp
 )
 
-#[[if(NOT CMAKE_SYSTEM_NAME MATCHES "Emscripten")
-    jfc_add_tests(
-        C++_STANDARD 17
-        C_STANDARD 90
+#JFC_LOG(FATAL_ERROR "BLAR" "${PROJECT_NAME}")
 
-        TEST_SOURCE_FILES
-            ${CMAKE_CURRENT_LIST_DIR}/test/example_test.cpp
-    )
-else()
-    jfc_log(STATUS "test" "testing not supported on ${CMAKE_SYSTEM_NAME}. Skipping...")
-endif()]]
+add_subdirectory(test)
+
+#if(JFC_BUILD_TESTS)
+#endif()
+

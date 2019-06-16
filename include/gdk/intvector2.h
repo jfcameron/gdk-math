@@ -6,9 +6,11 @@
 #include <utility>
 #include <iosfwd>
 
+#include <gdk/vector2.h>
+
 namespace gdk
 {
-    struct Vector2;
+    //struct Vector2;
         
     /// \brief Behaves like a Vector2 but uses integers for storage rather than floats.
     ///
