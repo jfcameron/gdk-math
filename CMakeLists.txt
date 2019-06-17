@@ -36,8 +36,6 @@ jfc_project(library
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vector4.cpp
 )
 
-#JFC_LOG(FATAL_ERROR "BLAR" "${PROJECT_NAME}")
-
 if (JFC_BUILD_TESTS)
     add_subdirectory(test)
 endif()
