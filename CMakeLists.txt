@@ -8,8 +8,6 @@ option(JFC_BUILD_APP    "Build the app" ON)
 option(JFC_BUILD_DOCS   "Build documentation" ON)
 option(JFC_BUILD_TESTS  "Build unit tests" ON)
 
-add_subdirectory(thirdparty)
-
 jfc_project(library
     NAME "gdkmath"
     VERSION 0.0
@@ -35,6 +33,8 @@ jfc_project(library
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vector3.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vector4.cpp
 )
+
+add_subdirectory(thirdparty)
 
 if (JFC_BUILD_TESTS)
     add_subdirectory(test)
