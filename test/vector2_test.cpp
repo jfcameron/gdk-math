@@ -6,11 +6,12 @@
 
 #include <gdk/vector2.h>
 
-TEST_CASE("Vector2 can construct", "[vector2]" )
+using namespace gdk;
+using component_type = long double;
+using vector_type = Vector2<component_type>;
+
+TEST_CASE("vector 2 constructors", "[vector2]" )
 {
-    using namespace gdk;
-    using component_type = long double;
-    using vector_type = Vector2<component_type>;
 
     SECTION("Default constructor produces a zero vector")
     {
@@ -22,7 +23,7 @@ TEST_CASE("Vector2 can construct", "[vector2]" )
     SECTION("Copy constructor work as expected.")
     {
         vector_type vector(vector_type::One);
-	
+
         REQUIRE(vector == vector_type::One);
     }
 
@@ -41,13 +42,18 @@ TEST_CASE("Vector2 can construct", "[vector2]" )
         REQUIRE(vector_type({0}, {1}) == vector_type::Up);
     }
 
+}
+
+TEST_CASE("vector2 operators", "[vector2]" )
+{
+
     SECTION("assignment operator")
     {
         vector_type a = vector_type::Down;
 
         REQUIRE(a == vector_type::Down);
     }
-    
+
     SECTION("*= operator")
     {
         vector_type a = vector_type::Right;

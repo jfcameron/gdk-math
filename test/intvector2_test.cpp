@@ -6,7 +6,7 @@
 
 #include <gdk/intvector2.h>
 
-TEST_CASE("IntVector2 can construct", "[intvector2]" )
+TEST_CASE("intvector2 constructors", "[intvector2]" )
 {
     using namespace gdk;
     using component_type = int;

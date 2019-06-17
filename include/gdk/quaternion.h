@@ -4,17 +4,22 @@
 #define GDK_MATH_QUATERNION_H
 
 #include <iosfwd>
+#include <iostream>
+#include <type_traits>
+
+#include <gdk/vector3>
 
 namespace gdk
 {
-    struct Vector3;
-        
     /// \brief Used to represent 3d rotations in a way insusceptible to gimblal lock (unlike Vector3)
+    template<typename component_type = float>
     struct Quaternion final
     {
+        static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
+
         float x = {0.}, y = {0.}, z = {0.}, w = {1.};
             
-        void setFromEuler(const Vector3 &aEulers);
+        /*void setFromEuler(const Vector3 &aEulers);
         gdk::Vector3 toEuler() const;
             
         Quaternion &operator=(const Quaternion &) = default;
@@ -27,10 +32,10 @@ namespace gdk
         Quaternion(Quaternion &&) = default;
         ~Quaternion() = default;
         
-        static const Quaternion Identity;
+        static const Quaternion Identity;*/
     };
         
-    std::ostream &operator<< (std::ostream &, const gdk::Quaternion &);
+    //std::ostream &operator<< (std::ostream &, const gdk::Quaternion &);
 }
 
 #endif

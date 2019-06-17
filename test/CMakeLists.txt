@@ -7,6 +7,9 @@
 
         TEST_SOURCE_FILES
             "${CMAKE_CURRENT_LIST_DIR}/vector2_test.cpp"
+            "${CMAKE_CURRENT_LIST_DIR}/intvector2_test.cpp"
+            "${CMAKE_CURRENT_LIST_DIR}/vector3_test.cpp"
+            "${CMAKE_CURRENT_LIST_DIR}/vector4_test.cpp"
 
         INCLUDE_DIRECTORIES
             "${${PROJECT_NAME}_INCLUDE_DIRECTORIES}"

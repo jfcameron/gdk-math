@@ -4,6 +4,7 @@
 #define GDK_MATH_VECTOR2_H
 
 #include <iosfwd>
+#include <iostream>
 #include <type_traits>
 #include <cmath>
 
@@ -131,16 +132,7 @@ namespace gdk
     
     template <typename T> std::ostream &operator<<(std::ostream &s, const Vector2<T> &vector)
     {
-//	T x = vector.x;
-//	T y = vector.y;
-
-	//std::cout << x;
-
-	//s << //"{ \"x\": " << x << ", " << "\"y\": " << y << "\n}";
-	
-	s << vector;
-	
-        return s;
+        return s << "{x: " << vector.x << ", " << "y: " << vector.y << "}";
     }
 }
 

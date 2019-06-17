@@ -1,4 +1,4 @@
-// © 2018 Joseph Cameron - All Rights Reserved
+/*// © 2018 Joseph Cameron - All Rights Reserved
 
 #include <gdk/vector2.h>
 
@@ -11,7 +11,7 @@ using namespace gdk;
 
 static constexpr char TAG[] = "Vector2";
 
-/*std::ostream &gdk::operator<<(std::ostream &s, const gdk::Vector2 &a)
+std::ostream &gdk::operator<<(std::ostream &s, const gdk::Vector2 &a)
 {
     return s << nlohmann::json
     {

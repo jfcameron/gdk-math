@@ -4,6 +4,7 @@
 #define GDK_MATH_INTVECTOR2_H
 
 #include <iosfwd>
+#include <iostream>
 #include <type_traits>
 #include <utility>
 
@@ -15,6 +16,8 @@ namespace gdk
     ///
     /// \detailed Useful for describing such things as non-normalized texel position,
     /// tilegrid position, window size, etc.
+    ///
+    /// \todo consider merging this into vector2. Now that this lib is templatized, the boundary here is blurred.
     template<typename component_type = int>
     struct IntVector2 final
     {
@@ -123,11 +126,9 @@ namespace gdk
         static const IntVector2<component_type> Zero;
     };
 
-    template <typename T> std::ostream &operator<< (std::ostream &s, const IntVector2<T> &vector)
+    template <typename T> std::ostream &operator<< (std::ostream &s, const gdk::IntVector2<T> &vector)
     {
-        s << vector;
-
-        return s;
+        return s << "{x: " << vector.x << ", " << "y: " << vector.y << "}";
     }
 
     template <typename T> const IntVector2<T> IntVector2<T>::Up =    { 0, 1};
