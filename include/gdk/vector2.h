@@ -12,7 +12,7 @@ namespace gdk
 {
     /// \brief 2 component floating point struct. 
     ///
-    /// \detailed useful for storing 2D position, speed, direction, normalized coordinates.
+    /// useful for storing 2D position, speed, direction, normalized coordinates.
     ///
     /// \note in reference to the static members: 
     /// X is considered the lateral component, pointing right, 

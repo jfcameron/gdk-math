@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 include("${CMAKE_CURRENT_SOURCE_DIR}/jfc-cmake/jfclib.cmake")
 
 option(JFC_BUILD_APP    "Build the app" ON)
-option(JFC_BUILD_DOCS   "Build documentation" OFF)
+option(JFC_BUILD_DOCS   "Build documentation" ON)
 option(JFC_BUILD_TESTS  "Build unit tests" ON)
 
 add_subdirectory(thirdparty)
@@ -30,7 +30,7 @@ jfc_project(library
     SOURCE_LIST
         ${CMAKE_CURRENT_SOURCE_DIR}/src/intvector2.cpp
         #${CMAKE_CURRENT_SOURCE_DIR}/src/mat4x4.cpp
-        #${CMAKE_CURRENT_SOURCE_DIR}/src/quaternion.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/quaternion.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vector2.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vector3.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vector4.cpp
@@ -38,8 +38,11 @@ jfc_project(library
 
 #JFC_LOG(FATAL_ERROR "BLAR" "${PROJECT_NAME}")
 
-add_subdirectory(test)
+if (JFC_BUILD_TESTS)
+    add_subdirectory(test)
+endif()
 
-#if(JFC_BUILD_TESTS)
-#endif()
+if (JFC_BUILD_DOCS)
+    add_subdirectory(docs)
+endif()
 

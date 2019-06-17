@@ -11,7 +11,7 @@ namespace gdk
 {
     /// \brief 3 component floating point struct.
     ///
-    /// \detailed Used to represent 3d position, scale, euler angles.
+    /// Used to represent 3d position, scale, euler angles.
     template<typename component_type = float>
     struct Vector3 final
     {
@@ -37,17 +37,17 @@ namespace gdk
             z /= magnitude;
         }
             
-        bool operator==(const Vector3 &other) const
+        bool operator==(const Vector3<component_type> &other) const
         {
             return (x == other.x && y == other.y && z == other.z);
         }
 
-        bool operator!=(const Vector3 &other) const
+        bool operator!=(const Vector3<component_type> &other) const
         {
             return (x != other.x || y != other.y || z != other.z);
         }
 
-        Vector3 operator+(const Vector3 &other) const
+        Vector3<component_type> operator+(const Vector3<component_type> &other) const
         {
             return {
                 other.x + x,
@@ -56,7 +56,7 @@ namespace gdk
             };
         }
 
-        Vector3 operator-(const Vector3 &other) const
+        Vector3<component_type> operator-(const Vector3<component_type> &other) const
         {
             return {
                 other.x - x,
@@ -65,7 +65,7 @@ namespace gdk
             };
         }
 
-        Vector3 operator*(const float &aScalar) const
+        Vector3<component_type> operator*(const float &aScalar) const
         {
             return {
                 x * aScalar,
@@ -74,7 +74,7 @@ namespace gdk
             };
         }
             
-        Vector3 &operator+=(const Vector3 &other)
+        Vector3<component_type> &operator+=(const Vector3<component_type> &other)
         {
             x += other.x;
             y += other.y;
@@ -83,7 +83,7 @@ namespace gdk
             return *this;
         }
 
-        Vector3 &operator-=(const Vector3 &other)
+        Vector3<component_type> &operator-=(const Vector3<component_type> &other)
         {
             x -= other.x;
             y -= other.y;
@@ -92,7 +92,7 @@ namespace gdk
             return *this;
         }
 
-        Vector3 &operator*=(const float &aScalar)
+        Vector3<component_type> &operator*=(const float &aScalar)
         {
             x *= aScalar;
             y *= aScalar;
@@ -101,27 +101,27 @@ namespace gdk
             return *this;
         }
 
-        Vector3 &operator=(const Vector3 &) = default;
+        Vector3<component_type> &operator=(const Vector3<component_type> &) = default;
             
-        Vector3(const float &aX, const float &aY, const float &aZ)
+        Vector3<component_type>(const float &aX, const float &aY, const float &aZ)
         : x(aX)
         , y(aY)
         , z(aZ)
         {}
 
-        Vector3() = default;
-        Vector3(const Vector3 &aVector3) = default;
-        Vector3(Vector3 &&) = default;
-        ~Vector3() = default;
+        Vector3<component_type>() = default;
+        Vector3<component_type>(const Vector3<component_type> &other) = default;
+        Vector3<component_type>(Vector3<component_type> &&) = default;
+        ~Vector3<component_type>() = default;
             
-        static const Vector3 Up;
-        static const Vector3 Down;
-        static const Vector3 Left;
-        static const Vector3 Right;
-        static const Vector3 Forward;
-        static const Vector3 Backward;
-        static const Vector3 Zero;
-        static const Vector3 One;
+        static const Vector3<component_type> Up;
+        static const Vector3<component_type> Down;
+        static const Vector3<component_type> Left;
+        static const Vector3<component_type> Right;
+        static const Vector3<component_type> Forward;
+        static const Vector3<component_type> Backward;
+        static const Vector3<component_type> Zero;
+        static const Vector3<component_type> One;
     };
 
     template <typename T> const Vector3<T> Vector3<T>::Up       = { 0.f, 1.f, 0.f};

@@ -12,9 +12,9 @@
 
 namespace gdk
 {
-    /// \brief Behaves like a Vector2 but uses integers for storage rather than floats.
+    /// \brief Behaves like a Vector2 but uses integral types for storage rather than floating point types.
     ///
-    /// \detailed Useful for describing such things as non-normalized texel position,
+    /// Useful for describing such things as non-normalized texel position,
     /// tilegrid position, window size, etc.
     ///
     /// \todo consider merging this into vector2. Now that this lib is templatized, the boundary here is blurred.
@@ -36,12 +36,12 @@ namespace gdk
 
         bool operator==(const IntVector2<component_type> &other) const
         {
-            return (x == other.x && y == other.y);
+            return x == other.x && y == other.y;
         }
 
         bool operator!=(const IntVector2<component_type> &other) const
         {
-            return (x != other.x || y != other.y);
+            return x != other.x || y != other.y;
         }
         
         IntVector2<component_type> operator+(const IntVector2<component_type> &other) const

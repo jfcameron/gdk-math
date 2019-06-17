@@ -36,7 +36,7 @@
 //    setFromEuler(aEulerAngles);
 //}
 //
-//void Quaternion::setFromEuler(const Vector3 &aEulerAngles)
+//void _Quaternion::setFromEuler_DELETE(const Vector3<float> &aEulerAngles)
 //{
 //    /*Vector3 eulerAngles = aEulerAngles;
 //    
@@ -52,7 +52,6 @@
 //    
 //    glm::quat quat = qRoll *qPitch * qYaw;*/
 //    
-//    
 //    //convert from euler to radian
 //    glm::vec3 buff = {aEulerAngles.x, aEulerAngles.y, aEulerAngles.z};
 //    
@@ -62,14 +61,13 @@
 //    
 //    glm::quat quat(buff);
 //    
-//    
 //    x = quat.x;
 //    y = quat.y;
 //    z = quat.z;
 //    w = quat.w;
 //}
 //
-//Vector3 Quaternion::toEuler() const
+//Vector3<float> _Quaternion::toEuler_DELETE() const
 //{
 //    glm::quat quaternion(w, x, y, z);
 //    
