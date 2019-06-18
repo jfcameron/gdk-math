@@ -53,6 +53,8 @@ namespace gdk
         template<typename high_precision_buffer_type = long double>
         void rotate(const Quaternion<T> &aRotation)
         {
+            static_assert(std::is_floating_point<high_precision_buffer_type>::value, "high_precision_buffer_type must be a floating point type");
+
             const Quaternion<T> &q = aRotation;
             
             high_precision_buffer_type sqw = q.w * q.w;

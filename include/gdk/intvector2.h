@@ -54,9 +54,9 @@ namespace gdk
             return IntVector2<component_type>(x - other.x, y - other.y);
         }
 
-        IntVector2<component_type> operator*(const float aScalar) const
+        IntVector2<component_type> operator*(const float aScalar) const //TODO: float?
         {
-            return IntVector2<component_type>(x * aScalar, y * aScalar);
+            return IntVector2<component_type>(x * aScalar, y * aScalar); //TODO: explicit casts?
         }
 
         IntVector2<component_type> operator*(const Vector2<component_type> &other) const

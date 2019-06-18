@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/jfc-cmake/jfclib.cmake")
 
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
+
 option(JFC_BUILD_APP    "Build the app" ON)
 option(JFC_BUILD_DOCS   "Build documentation" ON)
 option(JFC_BUILD_TESTS  "Build unit tests" ON)

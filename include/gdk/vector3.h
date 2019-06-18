@@ -17,20 +17,20 @@ namespace gdk
     {
         static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
 
-        float x = {0.}, y = {0.}, z = {0.};
+        component_type x = {0}, y = {0}, z = {0};
 
         //! Calculates the length of the vector
-        float length() const
+        component_type length() const
         {
-            return sqrt( (x*x) + (y*y) + (z*z) );
+            return sqrt((x * x) + (y * y) + (z * z));
         }
 
         //! Sets length of vector to 1
         void normalize()
         {
-            float magnitude = Vector3<component_type>::length();
+            component_type magnitude = Vector3<component_type>::length();
 
-            if (magnitude == 0.0f) return; // n/0 case
+            if (magnitude == 0) return; // n/0 case
 
             x /= magnitude;
             y /= magnitude;
@@ -39,12 +39,12 @@ namespace gdk
             
         bool operator==(const Vector3<component_type> &other) const
         {
-            return (x == other.x && y == other.y && z == other.z);
+            return x == other.x && y == other.y && z == other.z;
         }
 
         bool operator!=(const Vector3<component_type> &other) const
         {
-            return (x != other.x || y != other.y || z != other.z);
+            return x != other.x || y != other.y || z != other.z;
         }
 
         Vector3<component_type> operator+(const Vector3<component_type> &other) const
@@ -65,7 +65,7 @@ namespace gdk
             };
         }
 
-        Vector3<component_type> operator*(const float &aScalar) const
+        Vector3<component_type> operator*(const component_type &aScalar) const
         {
             return {
                 x * aScalar,
@@ -92,7 +92,7 @@ namespace gdk
             return *this;
         }
 
-        Vector3<component_type> &operator*=(const float &aScalar)
+        Vector3<component_type> &operator*=(const component_type &aScalar)
         {
             x *= aScalar;
             y *= aScalar;
@@ -103,7 +103,7 @@ namespace gdk
 
         Vector3<component_type> &operator=(const Vector3<component_type> &) = default;
             
-        Vector3<component_type>(const float &aX, const float &aY, const float &aZ)
+        Vector3<component_type>(const component_type &aX, const component_type &aY, const component_type &aZ)
         : x(aX)
         , y(aY)
         , z(aZ)
@@ -124,14 +124,14 @@ namespace gdk
         static const Vector3<component_type> One;
     };
 
-    template <typename T> const Vector3<T> Vector3<T>::Up       = { 0.f, 1.f, 0.f};
-    template <typename T> const Vector3<T> Vector3<T>::Down     = { 0.f,-1.f, 0.f};
-    template <typename T> const Vector3<T> Vector3<T>::Left     = {-1.f, 0.f, 0.f};
-    template <typename T> const Vector3<T> Vector3<T>::Right    = { 1.f, 0.f, 0.f};
-    template <typename T> const Vector3<T> Vector3<T>::Forward  = { 0.f, 0.f, 1.f};
-    template <typename T> const Vector3<T> Vector3<T>::Backward = { 0.f, 0.f,-1.f};
-    template <typename T> const Vector3<T> Vector3<T>::Zero     = { 0.f, 0.f, 0.f};
-    template <typename T> const Vector3<T> Vector3<T>::One      = { 1.f, 1.f, 1.f};
+    template <typename T> const Vector3<T> Vector3<T>::Up       = { 0, 1, 0};
+    template <typename T> const Vector3<T> Vector3<T>::Down     = { 0,-1, 0};
+    template <typename T> const Vector3<T> Vector3<T>::Left     = {-1, 0, 0};
+    template <typename T> const Vector3<T> Vector3<T>::Right    = { 1, 0, 0};
+    template <typename T> const Vector3<T> Vector3<T>::Forward  = { 0, 0, 1};
+    template <typename T> const Vector3<T> Vector3<T>::Backward = { 0, 0,-1};
+    template <typename T> const Vector3<T> Vector3<T>::Zero     = { 0, 0, 0};
+    template <typename T> const Vector3<T> Vector3<T>::One      = { 1, 1, 1};
 
     template <typename T> std::ostream &operator<< (std::ostream &s, const gdk::Vector3<T> &vector)
     {
