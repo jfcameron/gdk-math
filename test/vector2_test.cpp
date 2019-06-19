@@ -2,7 +2,8 @@
 
 #include <string>
 
-#include <catch.hpp>
+#include <jfc/catch.hpp>
+#include <jfc/types.h>
 
 #include <gdk/vector2.h>
 
@@ -10,7 +11,7 @@ using namespace gdk;
 using component_type = long double;
 using vector_type = Vector2<component_type>;
 
-TEST_CASE("vector 2 constructors", "[vector2]" )
+TEMPLATE_LIST_TEST_CASE("vector 2 constructors", "[vector2]", type::floating_point)
 {
 
     SECTION("Default constructor produces a zero vector")
@@ -44,7 +45,7 @@ TEST_CASE("vector 2 constructors", "[vector2]" )
 
 }
 
-TEST_CASE("vector2 operators", "[vector2]" )
+TEMPLATE_LIST_TEST_CASE("vector2 mutating operators and methods", "[vector2]", type::floating_point)
 {
 
     SECTION("assignment operator")
@@ -61,6 +62,17 @@ TEST_CASE("vector2 operators", "[vector2]" )
         a *= 5;
 
         REQUIRE(a == vector_type(5, 0));
+    }
+}
+
+TEMPLATE_LIST_TEST_CASE("vector2 non-mutating operators and methods", "[vector2]", type::floating_point)
+{
+    SECTION("length")
+    {
+        vector_type a = vector_type::Up;
+
+        std::cout << a << std::endl;
+        std::cout << a.length() << std::endl;
     }
 }
 

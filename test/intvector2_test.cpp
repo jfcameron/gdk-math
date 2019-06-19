@@ -2,15 +2,16 @@
 
 #include <string>
 
-#include <catch.hpp>
+#include <jfc/catch.hpp>
+#include <jfc/types.h>
 
 #include <gdk/intvector2.h>
 
-TEST_CASE("intvector2 constructors", "[intvector2]" )
+using namespace gdk;
+
+TEMPLATE_LIST_TEST_CASE("intvector2 constructors", "[intvector2]", type::integral)
 {
-    using namespace gdk;
-    using component_type = int;
-    using vector_type = IntVector2<component_type>;
+    using vector_type = IntVector2<TestType>;
 
     SECTION("Default constructor produces a zero vector")
     {

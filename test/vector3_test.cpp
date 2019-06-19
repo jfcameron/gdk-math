@@ -5,15 +5,14 @@
 #include <string>
 #include <tuple>
 
-#include <catch.hpp>
+#include <jfc/catch.hpp>
+#include <jfc/types.h>
 
 #include <gdk/vector3.h>
 
 using namespace gdk;
 
-using Types = std::tuple<float, double, long double>;
-
-TEMPLATE_LIST_TEST_CASE("vector3 constructors", "[vector3]", Types)
+TEMPLATE_LIST_TEST_CASE("vector3 constructors", "[vector3]", type::floating_point)
 {
     using vector_type = Vector3<TestType>;
 
@@ -44,7 +43,7 @@ TEMPLATE_LIST_TEST_CASE("vector3 constructors", "[vector3]", Types)
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("vector3 operators", "[vector3]", Types)
+TEMPLATE_LIST_TEST_CASE("vector3 operators", "[vector3]", type::floating_point)
 {
     using vector_type = Vector3<TestType>;
 

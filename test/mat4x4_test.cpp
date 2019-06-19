@@ -2,7 +2,8 @@
 
 #include <string>
 
-#include <catch.hpp>
+#include <jfc/catch.hpp>
+#include <jfc/types.h>
 
 #include <gdk/mat4x4.h>
 
@@ -12,7 +13,7 @@ using namespace gdk;
 using component_type = double long;
 using mat_type = Mat4x4<component_type>;
 
-TEST_CASE("mat4x4 constructors", "[mat4x4]" )
+TEMPLATE_LIST_TEST_CASE("mat4x4 constructors", "[mat4x4]", type::floating_point)
 {
     SECTION("Default constructor produces an identity matrix")
     {
@@ -22,7 +23,7 @@ TEST_CASE("mat4x4 constructors", "[mat4x4]" )
     }
 }
 
-TEST_CASE("mat4x4 operators", "[mat4x4]")
+TEMPLATE_LIST_TEST_CASE("mat4x4 operators", "[mat4x4]", type::floating_point)
 {
     SECTION("equality operator")
     {

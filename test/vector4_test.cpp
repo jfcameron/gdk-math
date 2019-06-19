@@ -2,7 +2,8 @@
 
 #include <string>
 
-#include <catch.hpp>
+#include <jfc/catch.hpp>
+#include <jfc/types.h>
 
 #include <gdk/vector4.h>
 
@@ -12,7 +13,7 @@ using namespace gdk;
 using component_type = double long;
 using vector_type = Vector4<component_type>;
 
-TEST_CASE("vector4 constructors", "[vector4]" )
+TEMPLATE_LIST_TEST_CASE("vector4 constructors", "[vector4]", type::floating_point)
 {
     SECTION("Default constructor produces a zero vector")
     {
