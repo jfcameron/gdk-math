@@ -20,31 +20,46 @@ namespace gdk
     template<typename component_type = float>
     struct Vector2 final
     {
-	static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
+	static_assert(std::is_arithmetic<component_type>::value && std::is_signed<component_type>::value, "component_type must be a signed arithmetic type");
 
-        component_type x = {0.}, y = {0.};
+        component_type x = {0}, y = {0};
 	
         //! squareroot of the sum of the 2nd power of the components
-        component_type length() const
+        template<class precision_type = component_type>
+        precision_type &length(precision_type &&instance = precision_type()) const
+        {
+            static_assert(std::is_arithmetic<precision_type>::value, "precision_type must be an arithmetic type");
+            
+            instance = std::sqrt( 
+                (static_cast<precision_type>(x) * static_cast<precision_type>(x)) + 
+                (static_cast<precision_type>(y) * static_cast<precision_type>(y)));
+
+            return instance;
+        }
+
+        //! division of the x component by the y component
+        template<class precision_type = component_type>
+        precision_type &getAspectRatio(precision_type &&instance = precision_type()) const
 	{
-	    return std::sqrt( (x * x) + (y * y) );
-	}
-	
-	//! division of the x component by the y component
-        component_type getAspectRatio() const 
-	{
-	    return x / y;
+            static_assert(std::is_arithmetic<precision_type>::value, "precision_type must be an arithmetic type");
+
+            instance = static_cast<precision_type>(x) / static_cast<precision_type>(y);
+
+	    return instance;
 	}
 
 	//! Reduce length of the vector to 1 while maintaning its direction
-	void normalize() 
+	Vector2<component_type> &normalize() 
 	{
 	    const component_type magnitude = Vector2<component_type>::length();
 	    
-	    if (magnitude == 0.0f) return; // n/0 case
-	    
-	    x /= magnitude;
-	    y /= magnitude;
+	    if (magnitude != 0) // avoid divide by 0 case
+            {
+                x /= magnitude;
+                y /= magnitude;
+            }
+
+            return *this;
 	}
             
         bool operator==(const Vector2<component_type> &other) const
@@ -59,17 +74,17 @@ namespace gdk
         
         Vector2<component_type> operator+(const Vector2<component_type> &other) const
 	{
-	    return {other.x + x, other.y + y};
+	    return {static_cast<component_type>(x + other.x), static_cast<component_type>(y + other.y)};
 	}
 	
         Vector2<component_type> operator-(const Vector2 &other) const
 	{
-	    return {other.x - x, other.y - y};
+	    return {static_cast<component_type>(x - other.x), static_cast<component_type>(y - other.y)};
 	}
 	
 	Vector2<component_type> operator*(const component_type aScalar) const
 	{
-	    return {x * aScalar, y * aScalar};
+	    return {static_cast<component_type>(x * aScalar), static_cast<component_type>(y * aScalar)};
 	}
             
         Vector2<component_type> &operator+=(const Vector2 &other)
@@ -114,21 +129,30 @@ namespace gdk
         Vector2<component_type>(const Vector2<component_type> &) = default;
         Vector2<component_type>(Vector2<component_type> &&) = default;
         ~Vector2<component_type>() = default;
-            
-	static const Vector2<component_type> Up;
+
+        //typedef typename std::make_signed<component_type>::type signed_type; //thinking about support for unsigned integrals
+
+        static const Vector2<component_type> Up;
 	static const Vector2<component_type> Down;
+	//static const Vector2<signed_type> Left;
 	static const Vector2<component_type> Left;
 	static const Vector2<component_type> Right;
 	static const Vector2<component_type> Zero;
 	static const Vector2<component_type> One;
     };
-    
-    template <typename T> const Vector2<T> Vector2<T>::Up    = { 0.f, 1.f};
-    template <typename T> const Vector2<T> Vector2<T>::Down  = { 0.f,-1.f};
-    template <typename T> const Vector2<T> Vector2<T>::Left  = {-1.f, 0.f};
-    template <typename T> const Vector2<T> Vector2<T>::Right = { 1.f, 0.f};
-    template <typename T> const Vector2<T> Vector2<T>::Zero  = { 0.f, 0.f};
-    template <typename T> const Vector2<T> Vector2<T>::One   = { 1.f, 1.f};
+
+///home/joe/Workspace/gdk-math/include/gdk/vector2.h:137:36: note: previous declaration as ‘const gdk::Vector2<typename std::make_signed<component_type>::type> gdk::Vector2 <component_type>::Left’
+
+    template <typename T> const Vector2<T> Vector2<T>::Up    = { 0, 1};
+    template <typename T> const Vector2<T> Vector2<T>::Down  = { 0,-1};
+
+    //template <typename component_type> const auto  gdk::Vector2 <component_type>::Left = {-1, 0};
+    //template <typename T> const Vector2<typename std::make_signed<T>::type> Vector2<T>::Left  = {-1, 0};
+    template <typename T> const Vector2<T> Vector2<T>::Left  = {-1, 0};
+
+    template <typename T> const Vector2<T> Vector2<T>::Right = { 1, 0};
+    template <typename T> const Vector2<T> Vector2<T>::Zero  = { 0, 0};
+    template <typename T> const Vector2<T> Vector2<T>::One   = { 1, 1};
     
     template <typename T> std::ostream &operator<<(std::ostream &s, const Vector2<T> &vector)
     {
