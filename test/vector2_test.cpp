@@ -97,9 +97,7 @@ TEMPLATE_LIST_TEST_CASE("vector2 non-mutating operators and methods", "[vector2]
     {
         const vector_type a = vector_type(5, 3);
 
-        auto blar = a.getAspectRatio(double());
-
-        std::cout << blar << std::endl;
+        REQUIRE((5./3.) == a.getAspectRatio(double()));
     }
 
     SECTION("operator==")

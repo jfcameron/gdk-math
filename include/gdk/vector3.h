@@ -26,15 +26,18 @@ namespace gdk
         }
 
         //! Sets length of vector to 1
-        void normalize()
+        Vector3<component_type> &normalize()
         {
             component_type magnitude = Vector3<component_type>::length();
 
-            if (magnitude == 0) return; // n/0 case
+            if (magnitude != 0) // avoid n/0 case
+            {
+                x /= magnitude;
+                y /= magnitude;
+                z /= magnitude;
+            }
 
-            x /= magnitude;
-            y /= magnitude;
-            z /= magnitude;
+            return *this;
         }
             
         bool operator==(const Vector3<component_type> &other) const
