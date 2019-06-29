@@ -1,4 +1,4 @@
-// © 2018 Joseph Cameron - All Rights Reserved
+// © 2018 - 2019 Joseph Cameron - All Rights Reserved
 
 #ifndef GDK_MATH_INTVECTOR2_H
 #define GDK_MATH_INTVECTOR2_H
@@ -17,12 +17,12 @@ namespace gdk
     /// Useful for describing such things as non-normalized texel position,
     /// tilegrid position, window size, etc.
     ///
-    /// \todo consider merging this into vector2. Now that this lib is templatized, the boundary here is blurred.
+    /// \todo consider merging this into vector2. Now that this lib is templatized, the distinction has blurred.
     template<typename component_type = int>
     struct IntVector2 final
     {
         static_assert(std::is_integral<component_type>::value, "component_type must be an integral type");
-        //static_assert(std::is_integral<is_signed>::value, "component_type must be a signed type");
+        //static_assert(std::is_signed<component_type>::value, "component_type must be a signed type");
 
         using std_pair_type = std::pair<component_type, component_type>;
 
@@ -59,7 +59,8 @@ namespace gdk
             return IntVector2<component_type>(x * aScalar, y * aScalar); //TODO: explicit casts?
         }
 
-        IntVector2<component_type> operator*(const Vector2<component_type> &other) const
+        template<class floating_point_component_type>
+        IntVector2<component_type> operator*(const Vector2<floating_point_component_type> &other) const
         {
             return IntVector2<component_type>(x * other.x, y * other.y);
         }
