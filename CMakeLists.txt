@@ -30,10 +30,10 @@ jfc_project(library
     SOURCE_LIST
         ${CMAKE_CURRENT_SOURCE_DIR}/src/intvector2.cpp
         #${CMAKE_CURRENT_SOURCE_DIR}/src/mat4x4.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/quaternion.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/vector2.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/vector3.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/vector4.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/quaternion.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/vector2.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/vector3.cpp
+        #${CMAKE_CURRENT_SOURCE_DIR}/src/vector4.cpp
 )
 
 if (JFC_BUILD_TESTS)

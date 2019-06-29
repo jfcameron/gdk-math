@@ -13,17 +13,17 @@
 namespace gdk
 {
     /// \brief 4 by 4 matrix of floating point numbers, used to calculate 3D transformations and camera projections.
-    template<typename T = float>
+    template<typename component_type = float>
     struct Mat4x4 final
     {
-        static_assert(std::is_floating_point<T>::value, "T must be a floating point type");
+        static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
 
         using size_type = char;
 
         static constexpr size_type RowOrColumnCount = 4;
 
         //! the 16 Ts of data, arranged in 2d grid
-        T m[RowOrColumnCount][RowOrColumnCount] =  
+        component_type m[RowOrColumnCount][RowOrColumnCount] =  
         {
             {1.,0.,0.,0.},
             {0.,1.,0.,0.},
@@ -31,17 +31,50 @@ namespace gdk
             {0.,0.,0.,1.},
         };
 
-        /*//! Sets matrix to an identity matrix
-        void setToIdentity(); //TODO: merge this with set, so set will have a set(const Mat4x4 &) overload. so a.setToIdentity() becomes a.set(mat4x4::Identity)? Or call it Reset? Not sure.
+        //! Sets matrix to an identity matrix
+        void setToIdentity() //TODO: merge this with set, so set will have a set(const Mat4x4 &) overload. so a.setToIdentity() becomes a.set(mat4x4::Identity)? Or call it Reset? Not sure.
+        {
+            m[0][0] = 1.; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
+            m[0][1] = 0.; m[1][1] = 1.; m[2][1] = 0.; m[3][1] = 0.;
+            m[0][2] = 0.; m[1][2] = 0.; m[2][2] = 1.; m[3][2] = 0.;
+            m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;    
+        }
+
 
         //! Sets matrix to an orthographic projection matrix, typically used to render a 2D scene or to render maps (lighting, depth) of a 3D scene
-        void setToOrthographic(const gdk::Vector2 &aOrthoSize, const T aNearClippingPlane, const T aFarClippingPlane, const T aViewportAspectRatio); //TODO: Remove this?
+        void setToOrthographic(const gdk::Vector2<component_type> &aOrthoSize, const component_type aNearClippingPlane, const component_type aFarClippingPlane, const component_type aViewportAspectRatio) //TODO: Remove this?
+        {
+            throw std::runtime_error("Mat4x4::setToOrthographic not implemented!");
+        }
 
         //! Sets matrix to a perspective projection matrix, typically used to render a 3D scene
-        void setToPerspective(const T aFieldOfView, const T aNearClippingPlane, const T aFarClippingPlane, const T aViewportAspectRatio); //TODO: Remove this?*/
+        void setToPerspective(const component_type aFieldOfView, const component_type aNearClippingPlane, const component_type aFarClippingPlane, const component_type aViewportAspectRatio) //TODO: Remove this?*/
+        {
+            float tanHalfFovy = static_cast<float>(tan(aFieldOfView * 0.5f));
+
+            m[0][0] = 1.0f / (aViewportAspectRatio * tanHalfFovy);
+            m[0][1] = 0.0f;
+            m[0][2] = 0.0f;
+            m[0][3] = 0.0f;
+
+            m[1][0] = 0.0f;
+            m[1][1] = 1.0f / tanHalfFovy;
+            m[1][2] = 0.0f;
+            m[1][3] = 0.0f;
+
+            m[2][0] = 0.0f;
+            m[2][1] = 0.0f;
+            m[2][2] =-(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
+            m[2][3] =-1.0f;
+
+            m[3][0] = 0.0f;
+            m[3][1] = 0.0f;
+            m[3][2] =-2.0f * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
+            m[3][3] = 0.0f;
+        }
 
         //! apply a translation to the matrix
-        void translate(const Vector3<T> &aTranslation)
+        void translate(const Vector3<component_type> &aTranslation)
         {
             m[3][0] = m[0][0] * aTranslation.x + m[1][0] * aTranslation.y + m[2][0] * aTranslation.z + m[3][0];
             m[3][1] = m[0][1] * aTranslation.x + m[1][1] * aTranslation.y + m[2][1] * aTranslation.z + m[3][1];
@@ -51,11 +84,11 @@ namespace gdk
 
         //! apply a rotation to the matrix
         template<typename high_precision_buffer_type = long double>
-        void rotate(const Quaternion<T> &aRotation)
+        void rotate(const Quaternion<component_type> &aRotation)
         {
             static_assert(std::is_floating_point<high_precision_buffer_type>::value, "high_precision_buffer_type must be a floating point type");
 
-            const Quaternion<T> &q = aRotation;
+            const Quaternion<component_type> &q = aRotation;
             
             high_precision_buffer_type sqw = q.w * q.w;
             high_precision_buffer_type sqx = q.x * q.x;
@@ -72,24 +105,24 @@ namespace gdk
             high_precision_buffer_type tmp1 = q.x * q.y;
             high_precision_buffer_type tmp2 = q.z * q.w;
             
-            m[1][0] = 2.0 * static_cast<T>(tmp1 + tmp2) * invs;
-            m[0][1] = 2.0 * static_cast<T>(tmp1 - tmp2) * invs;
+            m[1][0] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
+            m[0][1] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
             
             tmp1 = q.x * q.z;
             tmp2 = q.y * q.w;
             
-            m[2][0] = 2.0 * static_cast<T>(tmp1 - tmp2) * invs;
-            m[0][2] = 2.0 * static_cast<T>(tmp1 + tmp2) * invs;
+            m[2][0] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
+            m[0][2] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
             
             tmp1 = q.y * q.z;
             tmp2 = q.x * q.w;
             
-            m[2][1] = 2.0 * static_cast<T>(tmp1 + tmp2) * invs;
-            m[1][2] = 2.0 * static_cast<T>(tmp1 - tmp2) * invs;
+            m[2][1] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
+            m[1][2] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
         }
 
         //! apply a scale to the matrix
-        void scale(const Vector3<T> &aScale)
+        void scale(const Vector3<component_type> &aScale)
         {
             m[0][0] = m[0][0] * aScale.x;
             m[0][1] = m[0][1] * aScale.x;
@@ -112,10 +145,10 @@ namespace gdk
         //! transpose the matrix
         void transpose()
         {
-            T t00 = m[0][0]; T t10 = m[0][1]; T t20 = m[0][2]; T t30 = m[0][3];
-            T t01 = m[1][0]; T t11 = m[1][1]; T t21 = m[1][2]; T t31 = m[1][3];
-            T t02 = m[2][0]; T t12 = m[2][1]; T t22 = m[2][2]; T t32 = m[2][3];
-            T t03 = m[3][0]; T t13 = m[3][1]; T t23 = m[3][2]; T t33 = m[3][3];
+            component_type t00 = m[0][0]; component_type t10 = m[0][1]; component_type t20 = m[0][2]; component_type t30 = m[0][3];
+            component_type t01 = m[1][0]; component_type t11 = m[1][1]; component_type t21 = m[1][2]; component_type t31 = m[1][3];
+            component_type t02 = m[2][0]; component_type t12 = m[2][1]; component_type t22 = m[2][2]; component_type t32 = m[2][3];
+            component_type t03 = m[3][0]; component_type t13 = m[3][1]; component_type t23 = m[3][2]; component_type t33 = m[3][3];
             
             set(
                 t00, t10, t20, t30,
@@ -127,10 +160,10 @@ namespace gdk
 
         //! assign values to all 16 elements of the matrix
         Mat4x4 &set(
-            const T m00, const T m01, const T m02, const T m03, 
-            const T m10, const T m11, const T m12, const T m13,
-            const T m20, const T m21, const T m22, const T m23, 
-            const T m30, const T m31, const T m32, const T m33
+            const component_type m00, const component_type m01, const component_type m02, const component_type m03, 
+            const component_type m10, const component_type m11, const component_type m12, const component_type m13,
+            const component_type m20, const component_type m21, const component_type m22, const component_type m23, 
+            const component_type m30, const component_type m31, const component_type m32, const component_type m33
         )
         {
             m[0][0] = m00; m[0][1] = m01; m[0][2] = m02; m[0][3] = m03;
@@ -142,7 +175,7 @@ namespace gdk
         }
 
         //! multiply the matrix against another
-        Mat4x4<T> &multiply(const Mat4x4 &right)
+        Mat4x4<component_type> &multiply(const Mat4x4 &right)
         {
             set(
                 m[0][0] * right.m[0][0] + m[1][0] * right.m[0][1] + m[2][0] * right.m[0][2] + m[3][0] * right.m[0][3],
@@ -186,7 +219,7 @@ namespace gdk
         
         Mat4x4& operator=(const Mat4x4&) = default; 
 
-        bool operator==(const Mat4x4<T> &other) const
+        bool operator==(const Mat4x4<component_type> &other) const
         {
             for(size_type i = 0; i < RowOrColumnCount; ++i) for (size_type j = 0; j < RowOrColumnCount; ++j)
                 if (m[i][j] != other.m[i][j])
@@ -196,10 +229,10 @@ namespace gdk
         }
             
         Mat4x4(
-            const T a00, const T a01, const T a02, const T a03, 
-            const T a10, const T a11, const T a12, const T a13,
-            const T a20, const T a21, const T a22, const T a23, 
-            const T a30, const T a31, const T a32, const T a33
+            const component_type a00, const component_type a01, const component_type a02, const component_type a03, 
+            const component_type a10, const component_type a11, const component_type a12, const component_type a13,
+            const component_type a20, const component_type a21, const component_type a22, const component_type a23, 
+            const component_type a30, const component_type a31, const component_type a32, const component_type a33
         )
         : m ( 
             a00, a01, a02, a03, 
@@ -209,16 +242,16 @@ namespace gdk
         ) 
         {}
 
-        Mat4x4<T>() = default;
-        Mat4x4<T>(const Mat4x4<T>&) = default;
-        Mat4x4<T>(Mat4x4<T>&&) = default;
-        ~Mat4x4<T>() = default;
+        Mat4x4<component_type>() = default;
+        Mat4x4<component_type>(const Mat4x4<component_type>&) = default;
+        Mat4x4<component_type>(Mat4x4<component_type>&&) = default;
+        ~Mat4x4<component_type>() = default;
 
         //! multiplicative identity matrix
-        static const Mat4x4<T> Identity; 
+        static const Mat4x4<component_type> Identity; 
     };
 
-    template<typename T> const Mat4x4<T> Mat4x4<T>::Identity = Mat4x4<T>();
+    template<typename component_type> const Mat4x4<component_type> Mat4x4<component_type>::Identity = Mat4x4<component_type>();
         
     //std::ostream& operator<< (std::ostream&, const gdk::Mat4x4&);
 }
