@@ -48,7 +48,7 @@ TEMPLATE_LIST_TEST_CASE("vector3 constructors", "[vector3]", test_types)
         vector_type a(4, 5, 6);
         vector_type b(std::move(a));
 
-        REQUIRE(a == vector_type(4, 5, 6));
+        REQUIRE(b == vector_type(4, 5, 6));
     }
 }
 
