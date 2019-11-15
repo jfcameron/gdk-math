@@ -12,9 +12,11 @@ namespace gdk
     /// \brief 3 component floating point struct.
     ///
     /// Used to represent 3d position, scale, euler angles.
-    template<typename component_type = float>
+    template<typename component_type_param = float>
     struct Vector3 final
     {
+        using component_type = component_type_param;
+
         static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
 
         component_type x = {0}, y = {0}, z = {0};

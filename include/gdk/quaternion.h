@@ -14,9 +14,11 @@
 namespace gdk
 {
     /// \brief Used to represent 3d rotations in a way insusceptible to gimblal lock (unlike Vector3)
-    template<typename component_type = float>
+    template<typename component_type_param = float>
     struct Quaternion final
     {
+        using component_type = component_type_param;
+
         static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
 
         component_type x = {0.}, y = {0.}, z = {0.}, w = {1.};

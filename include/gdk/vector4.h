@@ -10,9 +10,11 @@
 namespace gdk
 {
     /// \brief Like Vector3<component_type> but allows w to != 1. Used in Vector vs Mat4x4 operations
-    template<typename component_type = float>
+    template<typename component_type_param = float>
     struct Vector4 final
     {
+        using component_type = component_type_param;
+
         float x = {0.}, y = {0.}, z = {0.}, w = {1.};
             
         bool operator==(const Vector4<component_type> &other) const

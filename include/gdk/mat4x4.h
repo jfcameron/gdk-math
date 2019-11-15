@@ -13,11 +13,13 @@
 namespace gdk
 {
     /// \brief 4 by 4 matrix of floating point numbers, used to calculate 3D transformations and camera projections.
-    template<typename component_type = float>
+    template<typename component_type_param = float>
     struct Mat4x4 final
     {
-        static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
+        using component_type = component_type_param;
 
+        static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
+        
         using size_type = char;
 
         static constexpr size_type RowOrColumnCount = 4;

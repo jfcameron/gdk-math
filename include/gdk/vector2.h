@@ -17,9 +17,11 @@ namespace gdk
     /// \note in reference to the static members: 
     /// X is considered the lateral component, pointing right, 
     /// Y the vertical, pointing up
-    template<typename component_type = float>
+    template<typename component_type_param = float>
     struct Vector2 final
     {
+        using component_type = component_type_param;
+
 	static_assert(std::is_arithmetic<component_type>::value && std::is_signed<component_type>::value, "component_type must be a signed arithmetic type");
 
         component_type x = {0}, y = {0};

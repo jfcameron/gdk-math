@@ -18,9 +18,11 @@ namespace gdk
     /// tilegrid position, window size, etc.
     ///
     /// \todo consider merging this into vector2. Now that this lib is templatized, the distinction has blurred.
-    template<typename component_type = int>
+    template<typename component_type_param = int>
     struct IntVector2 final
     {
+        using component_type = component_type_param;
+
         static_assert(std::is_integral<component_type>::value, "component_type must be an integral type");
         //static_assert(std::is_signed<component_type>::value, "component_type must be a signed type");
 
