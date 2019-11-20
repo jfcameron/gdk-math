@@ -49,12 +49,12 @@ TEMPLATE_LIST_TEST_CASE("vector2 mutating operators and methods", "[vector2]", t
 {
     using vector_type = Vector2<TestType>;
 
-    SECTION("normalize")
+    /*SECTION("normalize")
     {
         vector_type a = vector_type::Up * 10;
 
         REQUIRE(a.normalize() == vector_type::Up);
-    }
+    }*/
 
     SECTION("assignment operator")
     {
