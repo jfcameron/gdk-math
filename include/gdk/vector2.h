@@ -55,7 +55,7 @@ namespace gdk
 	{
 	    const component_type magnitude = Vector2<component_type>::length();
 	    
-	    if (magnitude != 0) // avoid divide by 0 case
+	    if (magnitude != 0) // avoid divide by 0 case TODO: shouldnt this be a throw? Contract could not be fulfilled
             {
                 x /= magnitude;
                 y /= magnitude;
