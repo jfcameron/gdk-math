@@ -64,7 +64,9 @@ namespace gdk
             
         bool operator==(const Vector2<component_type> &other) const
 	{
-	    return x == other.x && y == other.y;
+	    return 
+                x == other.x && 
+                y == other.y;
 	}
         
 	bool operator!=(const Vector2<component_type> &other) const
