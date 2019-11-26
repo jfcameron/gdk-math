@@ -50,7 +50,7 @@ namespace gdk
 	    return instance;
 	}
 
-	//! Reduce length of the vector to 1 while maintaning its direction
+	//! Reduce length of the vector to 1 while maintaning its direction TODO: throw on zero? cant fulfill contract on 0.
 	Vector2<component_type> &normalize() 
 	{
 	    const component_type magnitude = Vector2<component_type>::length();

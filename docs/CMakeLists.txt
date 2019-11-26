@@ -11,11 +11,3 @@ jfc_generate_documentation_doxygen(
         ../include/
 )
 
-jfc_generate_readme_md(
-    BRIEF "3D Math library focused on game and graphics applications."
- #   IMAGES
-  #      thing.png
-   #     blar.gif
-    #    zip.jpg
-#    DESCRIPTION "."
-)
