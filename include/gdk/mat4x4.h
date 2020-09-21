@@ -44,13 +44,21 @@ namespace gdk
 
 
         //! Sets matrix to an orthographic projection matrix, typically used to render a 2D scene or to render maps (lighting, depth) of a 3D scene
-        void setToOrthographic(const gdk::Vector2<component_type> &aOrthoSize, const component_type aNearClippingPlane, const component_type aFarClippingPlane, const component_type aViewportAspectRatio) //TODO: Remove this?
+        void setToOrthographic(const gdk::Vector2<component_type> &aOrthoSize, const component_type aNearClippingPlane, const component_type aFarClippingPlane, const component_type aViewportAspectRatio)
         {
-            throw std::runtime_error("Mat4x4::setToOrthographic not implemented!");
+			const component_type x = aOrthoSize.x / aViewportAspectRatio;
+			const component_type y = aOrthoSize.y;
+			const component_type n = -(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
+			const component_type f = -2.0f * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
+
+			m[0][0] = x ; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
+			m[0][1] = 0.; m[1][1] = y ; m[2][1] = 0.; m[3][1] = 0.;
+			m[0][2] = 0.; m[1][2] = 0.; m[2][2] = n ; m[3][2] = f ;
+			m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;
         }
 
         //! Sets matrix to a perspective projection matrix, typically used to render a 3D scene
-        void setToPerspective(const component_type aFieldOfView, const component_type aNearClippingPlane, const component_type aFarClippingPlane, const component_type aViewportAspectRatio) //TODO: Remove this?*/
+        void setToPerspective(const component_type aFieldOfView, const component_type aNearClippingPlane, const component_type aFarClippingPlane, const component_type aViewportAspectRatio)
         {
             float tanHalfFovy = static_cast<float>(tan(aFieldOfView * 0.5f));
 
