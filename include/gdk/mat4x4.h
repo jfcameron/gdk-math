@@ -24,7 +24,7 @@ namespace gdk
 
         static constexpr size_type RowOrColumnCount = 4;
 
-        //! the 16 Ts of data, arranged in 2d grid
+        //! the 16 Ts of data, arranged in 2d grid //TODO: switch to std::array<std::array ...?
         component_type m[RowOrColumnCount][RowOrColumnCount] =  
         {
             {1.,0.,0.,0.},
@@ -152,7 +152,7 @@ namespace gdk
             m[3][3] = m[3][3];
         }
 
-        //! transpose the matrix
+        //! transpose the matrix in place
         void transpose()
         {
             component_type t00 = m[0][0]; component_type t10 = m[0][1]; component_type t20 = m[0][2]; component_type t30 = m[0][3];
@@ -167,6 +167,55 @@ namespace gdk
                 t03, t13, t23, t33
             );
         }
+
+		//! inverse the matrix in place
+		void inverse()
+		{
+			component_type s0 = m[0][0] * m[1][1] - m[1][0] * m[0][1];
+			component_type s1 = m[0][0] * m[1][2] - m[1][0] * m[0][2];
+			component_type s2 = m[0][0] * m[1][3] - m[1][0] * m[0][3];
+			component_type s3 = m[0][1] * m[1][2] - m[1][1] * m[0][2];
+			component_type s4 = m[0][1] * m[1][3] - m[1][1] * m[0][3];
+			component_type s5 = m[0][2] * m[1][3] - m[1][2] * m[0][3];
+
+			component_type c5 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
+			component_type c4 = m[2][1] * m[3][3] - m[3][1] * m[2][3];
+			component_type c3 = m[2][1] * m[3][2] - m[3][1] * m[2][2];
+			component_type c2 = m[2][0] * m[3][3] - m[3][0] * m[2][3];
+			component_type c1 = m[2][0] * m[3][2] - m[3][0] * m[2][2];
+			component_type c0 = m[2][0] * m[3][1] - m[3][0] * m[2][1];
+
+			component_type invdet = component_type(1) / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
+
+			component_type b[RowOrColumnCount][RowOrColumnCount];
+
+			b[0][0] = (m[1][1] * c5 - m[1][2] * c4 + m[1][3] * c3) * invdet;
+			b[0][1] = (-m[0][1] * c5 + m[0][2] * c4 - m[0][3] * c3) * invdet;
+			b[0][2] = (m[3][1] * s5 - m[3][2] * s4 + m[3][3] * s3) * invdet;
+			b[0][3] = (-m[2][1] * s5 + m[2][2] * s4 - m[2][3] * s3) * invdet;
+
+			b[1][0] = (-m[1][0] * c5 + m[1][2] * c2 - m[1][3] * c1) * invdet;
+			b[1][1] = (m[0][0] * c5 - m[0][2] * c2 + m[0][3] * c1) * invdet;
+			b[1][2] = (-m[3][0] * s5 + m[3][2] * s2 - m[3][3] * s1) * invdet;
+			b[1][3] = (m[2][0] * s5 - m[2][2] * s2 + m[2][3] * s1) * invdet;
+
+			b[2][0] = (m[1][0] * c4 - m[1][1] * c2 + m[1][3] * c0) * invdet;
+			b[2][1] = (-m[0][0] * c4 + m[0][1] * c2 - m[0][3] * c0) * invdet;
+			b[2][2] = (m[3][0] * s4 - m[3][1] * s2 + m[3][3] * s0) * invdet;
+			b[2][3] = (-m[2][0] * s4 + m[2][1] * s2 - m[2][3] * s0) * invdet;
+
+			b[3][0] = (-m[1][0] * c3 + m[1][1] * c1 - m[1][2] * c0) * invdet;
+			b[3][1] = (m[0][0] * c3 - m[0][1] * c1 + m[0][2] * c0) * invdet;
+			b[3][2] = (-m[3][0] * s3 + m[3][1] * s1 - m[3][2] * s0) * invdet;
+			b[3][3] = (m[2][0] * s3 - m[2][1] * s1 + m[2][2] * s0) * invdet;
+
+			set(
+				b[0][0], b[0][1], b[0][2], b[0][3],
+				b[1][0], b[1][1], b[1][2], b[1][3],
+				b[2][0], b[2][1], b[2][2], b[2][3],
+				b[3][0], b[3][1], b[3][2], b[3][3]
+			);
+		}
 
         //! assign values to all 16 elements of the matrix
         Mat4x4 &set(
@@ -264,6 +313,14 @@ namespace gdk
     template<typename component_type> const Mat4x4<component_type> Mat4x4<component_type>::Identity = Mat4x4<component_type>();
         
     //std::ostream& operator<< (std::ostream&, const gdk::Mat4x4&);
+	template <typename T> std::ostream& operator<< (std::ostream& s, const gdk::Mat4x4<T> &mat)
+	{
+		return s
+			<< "{ " << mat.m[0][0] << ", " << mat.m[1][0] << ", " << mat.m[2][0] << ", " << mat.m[3][0] << "}\n"
+			<< "{ " << mat.m[0][1] << ", " << mat.m[1][1] << ", " << mat.m[2][1] << ", " << mat.m[3][1] << "}\n"
+			<< "{ " << mat.m[0][2] << ", " << mat.m[1][2] << ", " << mat.m[2][2] << ", " << mat.m[3][2] << "}\n"
+			<< "{ " << mat.m[0][3] << ", " << mat.m[1][3] << ", " << mat.m[2][3] << ", " << mat.m[3][3] << "}\n";
+	}
 }
 
 #endif
