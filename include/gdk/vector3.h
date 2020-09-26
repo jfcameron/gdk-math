@@ -114,6 +114,10 @@ namespace gdk
         , z(aZ)
         {}
 
+		Vector3<component_type>(const component_type& a)
+		: Vector3(a, a, a)
+		{}
+
         Vector3<component_type>() = default;
         Vector3<component_type>(const Vector3<component_type> &other) = default;
         Vector3<component_type>(Vector3<component_type> &&) = default;
