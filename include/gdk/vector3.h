@@ -3,6 +3,7 @@
 #ifndef GDK_MATH_VECTOR3_H
 #define GDK_MATH_VECTOR3_H
 
+#include <cmath>
 #include <iosfwd>
 #include <iostream>
 #include <type_traits>
@@ -40,6 +41,16 @@ namespace gdk
             }
 
             return *this;
+        }
+        
+        //! calculate the distance between two vectors
+        component_type distance(const Vector3<component_type> &other) const
+        {
+            auto a = std::pow(other.x - x, 2);
+            auto b = std::pow(other.y - y, 2);
+            auto c = std::pow(other.z - z, 2);
+
+            return std::sqrt(a + b + c);
         }
             
         bool operator==(const Vector3<component_type> &other) const

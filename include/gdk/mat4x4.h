@@ -92,6 +92,12 @@ namespace gdk
             m[3][3] = m[0][3] * aTranslation.x + m[1][3] * aTranslation.y + m[2][3] * aTranslation.z + m[3][3];
         }
 
+        //! get the translation vector from this matrix
+        Vector3<component_type> translation() const
+        {
+            return Vector3<component_type>(m[3][0], m[3][1], m[3][2]);
+        }
+
         //! apply a rotation to the matrix
         template<typename high_precision_buffer_type = long double>
         void rotate(const Quaternion<component_type> &aRotation)
