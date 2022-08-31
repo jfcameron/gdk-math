@@ -111,7 +111,7 @@ namespace gdk
         {}
         
         IntVector2<component_type>(const std_pair_type &aPair)
-        : IntVector2<component_type>::IntVector2<component_type>(aPair.first, aPair.second)
+        : IntVector2<component_type>(aPair.first, aPair.second)
         {}
 
         IntVector2<component_type>() = default;
