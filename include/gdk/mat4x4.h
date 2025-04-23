@@ -1,4 +1,4 @@
-// © 2018 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - All Rights Reserved
 
 #ifndef GDK_MATH_MAT4X4_H
 #define GDK_MATH_MAT4X4_H
@@ -24,7 +24,7 @@ namespace gdk
 
         static constexpr size_type RowOrColumnCount = 4;
 
-        //! the 16 Ts of data, arranged in 2d grid //TODO: switch to std::array<std::array ...?
+        //! the 16 Ts of data, arranged in 2d grid
         component_type m[RowOrColumnCount][RowOrColumnCount] =  
         {
             {1.,0.,0.,0.},
@@ -34,7 +34,7 @@ namespace gdk
         };
 
         //! Sets matrix to an identity matrix
-        void setToIdentity() //TODO: merge this with set, so set will have a set(const Mat4x4 &) overload. so a.setToIdentity() becomes a.set(mat4x4::Identity)? Or call it Reset? Not sure.
+        void setToIdentity() 
         {
             m[0][0] = 1.; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
             m[0][1] = 0.; m[1][1] = 1.; m[2][1] = 0.; m[3][1] = 0.;
@@ -42,23 +42,30 @@ namespace gdk
             m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;    
         }
 
-
         //! Sets matrix to an orthographic projection matrix, typically used to render a 2D scene or to render maps (lighting, depth) of a 3D scene
-        void setToOrthographic(const gdk::Vector2<component_type> &aOrthoSize, const component_type aNearClippingPlane, const component_type aFarClippingPlane, const component_type aViewportAspectRatio)
+        void setToOrthographic(
+            const gdk::Vector2<component_type> &aOrthoSize, 
+            const component_type aNearClippingPlane, 
+            const component_type aFarClippingPlane, 
+            const component_type aViewportAspectRatio)
         {
-			const component_type x = aOrthoSize.x / aViewportAspectRatio;
-			const component_type y = aOrthoSize.y;
-			const component_type n = -(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
-			const component_type f = -2.0f * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
+            const component_type x = aOrthoSize.x / aViewportAspectRatio;
+            const component_type y = aOrthoSize.y;
+            const component_type n = -(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
+            const component_type f = -2.0f * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
 
-			m[0][0] = x ; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
-			m[0][1] = 0.; m[1][1] = y ; m[2][1] = 0.; m[3][1] = 0.;
-			m[0][2] = 0.; m[1][2] = 0.; m[2][2] = n ; m[3][2] = f ;
-			m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;
+            m[0][0] = x ; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
+            m[0][1] = 0.; m[1][1] = y ; m[2][1] = 0.; m[3][1] = 0.;
+            m[0][2] = 0.; m[1][2] = 0.; m[2][2] = n ; m[3][2] = f ;
+            m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;
         }
 
         //! Sets matrix to a perspective projection matrix, typically used to render a 3D scene
-        void setToPerspective(const component_type aFieldOfView, const component_type aNearClippingPlane, const component_type aFarClippingPlane, const component_type aViewportAspectRatio)
+        void setToPerspective(
+            const component_type aFieldOfView, 
+            const component_type aNearClippingPlane, 
+            const component_type aFarClippingPlane, 
+            const component_type aViewportAspectRatio)
         {
             float tanHalfFovy = static_cast<float>(tan(aFieldOfView * 0.5f));
 
@@ -104,6 +111,10 @@ namespace gdk
         {
             static_assert(std::is_floating_point<high_precision_buffer_type>::value, "high_precision_buffer_type must be a floating point type");
 
+            using T = component_type;
+            using namespace std;
+////////////////////////////////////////////////////////////////////////
+
             const Quaternion<component_type> &q = aRotation;
             
             high_precision_buffer_type sqw = q.w * q.w;
@@ -135,6 +146,35 @@ namespace gdk
             
             m[2][1] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
             m[1][2] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
+
+////////////////////////////////////////////////////////////////////////
+            /*const Vector3<T> euler = aRotation.toEuler();
+
+            T c1 = cos(-euler.x);
+            T c2 = cos(-euler.y);
+            T c3 = cos(-euler.z);
+            
+            T s1 = sin(-euler.x);
+            T s2 = sin(-euler.y);
+            T s3 = sin(-euler.z);
+
+            m[0][0] =  c2 * c3;
+            m[0][1] = -c1 * s3 + s1 * s2 * c3;
+            m[0][2] =  s1 * s3 + c1 * s2 * c3;
+            m[0][3] =  m[0][3];
+            m[1][0] =  c2 * s3;
+            m[1][1] =  c1 * c3 + s1 * s2 * s3;
+            m[1][2] = -s1 * c3 + c1 * s2 * s3;
+            m[1][3] =  m[1][3];
+            m[2][0] = -s2;
+            m[2][1] =  s1 * c2;
+            m[2][2] =  c1 * c2;
+            m[2][3] =  m[2][3]; 
+            m[3][0] =  m[3][0]; 
+            m[3][1] =  m[3][1]; 
+            m[3][2] =  m[3][2]; 
+            m[3][3] =  m[3][3];*/
+////////////////////////////////////////////////////////////////////////
         }
 
         //! apply a scale to the matrix
@@ -174,62 +214,61 @@ namespace gdk
             );
         }
 
-		//! inverse the matrix in place
-		void inverse()
-		{
-			component_type s0 = m[0][0] * m[1][1] - m[1][0] * m[0][1];
-			component_type s1 = m[0][0] * m[1][2] - m[1][0] * m[0][2];
-			component_type s2 = m[0][0] * m[1][3] - m[1][0] * m[0][3];
-			component_type s3 = m[0][1] * m[1][2] - m[1][1] * m[0][2];
-			component_type s4 = m[0][1] * m[1][3] - m[1][1] * m[0][3];
-			component_type s5 = m[0][2] * m[1][3] - m[1][2] * m[0][3];
+        //! inverse the matrix in place
+        void inverse()
+        {
+                component_type s0 = m[0][0] * m[1][1] - m[1][0] * m[0][1];
+                component_type s1 = m[0][0] * m[1][2] - m[1][0] * m[0][2];
+                component_type s2 = m[0][0] * m[1][3] - m[1][0] * m[0][3];
+                component_type s3 = m[0][1] * m[1][2] - m[1][1] * m[0][2];
+                component_type s4 = m[0][1] * m[1][3] - m[1][1] * m[0][3];
+                component_type s5 = m[0][2] * m[1][3] - m[1][2] * m[0][3];
 
-			component_type c5 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
-			component_type c4 = m[2][1] * m[3][3] - m[3][1] * m[2][3];
-			component_type c3 = m[2][1] * m[3][2] - m[3][1] * m[2][2];
-			component_type c2 = m[2][0] * m[3][3] - m[3][0] * m[2][3];
-			component_type c1 = m[2][0] * m[3][2] - m[3][0] * m[2][2];
-			component_type c0 = m[2][0] * m[3][1] - m[3][0] * m[2][1];
+                component_type c5 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
+                component_type c4 = m[2][1] * m[3][3] - m[3][1] * m[2][3];
+                component_type c3 = m[2][1] * m[3][2] - m[3][1] * m[2][2];
+                component_type c2 = m[2][0] * m[3][3] - m[3][0] * m[2][3];
+                component_type c1 = m[2][0] * m[3][2] - m[3][0] * m[2][2];
+                component_type c0 = m[2][0] * m[3][1] - m[3][0] * m[2][1];
 
-			component_type invdet = component_type(1) / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
+                component_type invdet = component_type(1) / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
 
-			component_type b[RowOrColumnCount][RowOrColumnCount];
+                component_type b[RowOrColumnCount][RowOrColumnCount];
 
-			b[0][0] = (m[1][1] * c5 - m[1][2] * c4 + m[1][3] * c3) * invdet;
-			b[0][1] = (-m[0][1] * c5 + m[0][2] * c4 - m[0][3] * c3) * invdet;
-			b[0][2] = (m[3][1] * s5 - m[3][2] * s4 + m[3][3] * s3) * invdet;
-			b[0][3] = (-m[2][1] * s5 + m[2][2] * s4 - m[2][3] * s3) * invdet;
+                b[0][0] = (m[1][1] * c5 - m[1][2] * c4 + m[1][3] * c3) * invdet;
+                b[0][1] = (-m[0][1] * c5 + m[0][2] * c4 - m[0][3] * c3) * invdet;
+                b[0][2] = (m[3][1] * s5 - m[3][2] * s4 + m[3][3] * s3) * invdet;
+                b[0][3] = (-m[2][1] * s5 + m[2][2] * s4 - m[2][3] * s3) * invdet;
 
-			b[1][0] = (-m[1][0] * c5 + m[1][2] * c2 - m[1][3] * c1) * invdet;
-			b[1][1] = (m[0][0] * c5 - m[0][2] * c2 + m[0][3] * c1) * invdet;
-			b[1][2] = (-m[3][0] * s5 + m[3][2] * s2 - m[3][3] * s1) * invdet;
-			b[1][3] = (m[2][0] * s5 - m[2][2] * s2 + m[2][3] * s1) * invdet;
+                b[1][0] = (-m[1][0] * c5 + m[1][2] * c2 - m[1][3] * c1) * invdet;
+                b[1][1] = (m[0][0] * c5 - m[0][2] * c2 + m[0][3] * c1) * invdet;
+                b[1][2] = (-m[3][0] * s5 + m[3][2] * s2 - m[3][3] * s1) * invdet;
+                b[1][3] = (m[2][0] * s5 - m[2][2] * s2 + m[2][3] * s1) * invdet;
 
-			b[2][0] = (m[1][0] * c4 - m[1][1] * c2 + m[1][3] * c0) * invdet;
-			b[2][1] = (-m[0][0] * c4 + m[0][1] * c2 - m[0][3] * c0) * invdet;
-			b[2][2] = (m[3][0] * s4 - m[3][1] * s2 + m[3][3] * s0) * invdet;
-			b[2][3] = (-m[2][0] * s4 + m[2][1] * s2 - m[2][3] * s0) * invdet;
+                b[2][0] = (m[1][0] * c4 - m[1][1] * c2 + m[1][3] * c0) * invdet;
+                b[2][1] = (-m[0][0] * c4 + m[0][1] * c2 - m[0][3] * c0) * invdet;
+                b[2][2] = (m[3][0] * s4 - m[3][1] * s2 + m[3][3] * s0) * invdet;
+                b[2][3] = (-m[2][0] * s4 + m[2][1] * s2 - m[2][3] * s0) * invdet;
 
-			b[3][0] = (-m[1][0] * c3 + m[1][1] * c1 - m[1][2] * c0) * invdet;
-			b[3][1] = (m[0][0] * c3 - m[0][1] * c1 + m[0][2] * c0) * invdet;
-			b[3][2] = (-m[3][0] * s3 + m[3][1] * s1 - m[3][2] * s0) * invdet;
-			b[3][3] = (m[2][0] * s3 - m[2][1] * s1 + m[2][2] * s0) * invdet;
+                b[3][0] = (-m[1][0] * c3 + m[1][1] * c1 - m[1][2] * c0) * invdet;
+                b[3][1] = (m[0][0] * c3 - m[0][1] * c1 + m[0][2] * c0) * invdet;
+                b[3][2] = (-m[3][0] * s3 + m[3][1] * s1 - m[3][2] * s0) * invdet;
+                b[3][3] = (m[2][0] * s3 - m[2][1] * s1 + m[2][2] * s0) * invdet;
 
-			set(
-				b[0][0], b[0][1], b[0][2], b[0][3],
-				b[1][0], b[1][1], b[1][2], b[1][3],
-				b[2][0], b[2][1], b[2][2], b[2][3],
-				b[3][0], b[3][1], b[3][2], b[3][3]
-			);
-		}
+                set(
+                        b[0][0], b[0][1], b[0][2], b[0][3],
+                        b[1][0], b[1][1], b[1][2], b[1][3],
+                        b[2][0], b[2][1], b[2][2], b[2][3],
+                        b[3][0], b[3][1], b[3][2], b[3][3]
+                );
+        }
 
         //! assign values to all 16 elements of the matrix
         Mat4x4 &set(
             const component_type m00, const component_type m01, const component_type m02, const component_type m03, 
             const component_type m10, const component_type m11, const component_type m12, const component_type m13,
             const component_type m20, const component_type m21, const component_type m22, const component_type m23, 
-            const component_type m30, const component_type m31, const component_type m32, const component_type m33
-        )
+            const component_type m30, const component_type m31, const component_type m32, const component_type m33)
         {
             m[0][0] = m00; m[0][1] = m01; m[0][2] = m02; m[0][3] = m03;
             m[1][0] = m10; m[1][1] = m11; m[1][2] = m12; m[1][3] = m13;
@@ -258,8 +297,7 @@ namespace gdk
                 m[0][0] * right.m[3][0] + m[1][0] * right.m[3][1] + m[2][0] * right.m[3][2] + m[3][0] * right.m[3][3],
                 m[0][1] * right.m[3][0] + m[1][1] * right.m[3][1] + m[2][1] * right.m[3][2] + m[3][1] * right.m[3][3],
                 m[0][2] * right.m[3][0] + m[1][2] * right.m[3][1] + m[2][2] * right.m[3][2] + m[3][2] * right.m[3][3],
-                m[0][3] * right.m[3][0] + m[1][3] * right.m[3][1] + m[2][3] * right.m[3][2] + m[3][3] * right.m[3][3]
-            );
+                m[0][3] * right.m[3][0] + m[1][3] * right.m[3][1] + m[2][3] * right.m[3][2] + m[3][3] * right.m[3][3]);
             
             return *this;
         }
@@ -293,12 +331,11 @@ namespace gdk
             return true;
         }
             
-        Mat4x4(
+        Mat4x4<component_type>(
             const component_type a00, const component_type a01, const component_type a02, const component_type a03, 
             const component_type a10, const component_type a11, const component_type a12, const component_type a13,
             const component_type a20, const component_type a21, const component_type a22, const component_type a23, 
-            const component_type a30, const component_type a31, const component_type a32, const component_type a33
-        )
+            const component_type a30, const component_type a31, const component_type a32, const component_type a33)
         : m ( 
             a00, a01, a02, a03, 
             a10, a11, a12, a13, 
@@ -306,6 +343,17 @@ namespace gdk
             a30, a31, a32, a33
         ) 
         {}
+
+        Mat4x4<component_type>(
+            const Vector3<component_type> &aWorldPos, 
+            const Quaternion<component_type> &aRotation, 
+            const Vector3<component_type> &aScale)
+        {
+            setToIdentity();
+            translate(aWorldPos);
+            rotate(aRotation);
+            scale(aScale);
+        }
 
         Mat4x4<component_type>() = default;
         Mat4x4<component_type>(const Mat4x4<component_type>&) = default;
@@ -318,15 +366,14 @@ namespace gdk
 
     template<typename component_type> const Mat4x4<component_type> Mat4x4<component_type>::Identity = Mat4x4<component_type>();
         
-    //std::ostream& operator<< (std::ostream&, const gdk::Mat4x4&);
-	template <typename T> std::ostream& operator<< (std::ostream& s, const gdk::Mat4x4<T> &mat)
-	{
-		return s
-			<< "{ " << mat.m[0][0] << ", " << mat.m[1][0] << ", " << mat.m[2][0] << ", " << mat.m[3][0] << "}\n"
-			<< "{ " << mat.m[0][1] << ", " << mat.m[1][1] << ", " << mat.m[2][1] << ", " << mat.m[3][1] << "}\n"
-			<< "{ " << mat.m[0][2] << ", " << mat.m[1][2] << ", " << mat.m[2][2] << ", " << mat.m[3][2] << "}\n"
-			<< "{ " << mat.m[0][3] << ", " << mat.m[1][3] << ", " << mat.m[2][3] << ", " << mat.m[3][3] << "}\n";
-	}
+    template <typename T> std::ostream& operator<< (std::ostream& s, const gdk::Mat4x4<T> &mat)
+    {
+        return s
+            << "{ " << mat.m[0][0] << ", " << mat.m[1][0] << ", " << mat.m[2][0] << ", " << mat.m[3][0] << "}\n"
+            << "{ " << mat.m[0][1] << ", " << mat.m[1][1] << ", " << mat.m[2][1] << ", " << mat.m[3][1] << "}\n"
+            << "{ " << mat.m[0][2] << ", " << mat.m[1][2] << ", " << mat.m[2][2] << ", " << mat.m[3][2] << "}\n"
+            << "{ " << mat.m[0][3] << ", " << mat.m[1][3] << ", " << mat.m[2][3] << ", " << mat.m[3][3] << "}\n";
+    }
 }
 
 #endif

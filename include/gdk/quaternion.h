@@ -1,4 +1,4 @@
-// © 2018 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - All Rights Reserved
 
 #ifndef GDK_MATH_QUATERNION_H
 #define GDK_MATH_QUATERNION_H
@@ -23,26 +23,61 @@ namespace gdk
 
         component_type x = {0.}, y = {0.}, z = {0.}, w = {1.};
             
-        void setFromEuler(const Vector3<component_type> &aEulerAngles) //TODO: REMOVE GLM DEPENDENCY
+        void setFromEuler(const Vector3<component_type> &aEulerAngles)
         {
-            glm::vec3 buff = {aEulerAngles.x, aEulerAngles.y, aEulerAngles.z};
+            static const component_type HALF(0.5);
 
-            glm::quat quat(buff);
+            const auto yaw(aEulerAngles.z);
+            const auto pitch(aEulerAngles.y);
+            const auto roll(aEulerAngles.x);
 
-            x = quat.x;
-            y = quat.y;
-            z = quat.z;
-            w = quat.w;
+            using namespace std;
+
+            const auto cy = cos(yaw * HALF);
+            const auto sy = sin(yaw * HALF);
+            const auto cp = cos(pitch * HALF);
+            const auto sp = sin(pitch * HALF);
+            const auto cr = cos(roll * HALF);
+            const auto sr = sin(roll * HALF);
+
+            w = cr * cp * cy + sr * sp * sy;
+            x = sr * cp * cy - cr * sp * sy;
+            y = cr * sp * cy + sr * cp * sy;
+            z = cr * cp * sy - sr * sp * cy;
         }
 
-        Vector3<component_type> toEuler() const //TODO: REMOVE GLM DEPENDENCY
+        Vector3<component_type> toEuler() const
         {
+            using namespace std;
+
+/////////////////////////////////////////////////////////// works, relies on glm
             glm::quat quaternion(w, x, y, z);
 
             //convert from radian to euler
             glm::vec3 buff = glm::eulerAngles(quaternion);
 
             return {buff.x, buff.y, buff.z};
+/////////////////////////////////////////////////////////// borked
+            /*Vector3<component_type> vec;
+
+            //x
+            const auto sinr_cosp = 2 * (w * x + y * z);
+            const auto cosr_cosp = 1 - 2 * (x * x + y * y);
+            vec.x = atan2(sinr_cosp, cosr_cosp);
+
+            //y
+            const auto sinp = 2 * (w * y - z * x);
+            if (abs(sinp) >= 1)
+                vec.y = copysign(M_PI / 2, sinp);
+            else
+                vec.y = asin(sinp);
+
+            //z
+            const auto siny_cosp = 2 * (w * z + x * y);
+            const auto cosy_cosp = 1 - 2 * (y * y + z * z);
+            vec.z = atan2(siny_cosp, cosy_cosp);
+
+            return vec;*/
         }
             
         Quaternion<component_type> &operator=(const Quaternion<component_type> &) = default;
