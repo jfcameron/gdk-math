@@ -20,12 +20,12 @@ namespace gdk
 
         static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
         
-        using size_type = char;
+        using order_type = char;
 
-        static constexpr size_type RowOrColumnCount = 4;
+        static constexpr order_type order = 4;
 
         //! the 16 Ts of data, arranged in 2d grid
-        component_type m[RowOrColumnCount][RowOrColumnCount] =  
+        component_type m[order][order] =  
         {
             {1.,0.,0.,0.},
             {0.,1.,0.,0.},
@@ -113,7 +113,6 @@ namespace gdk
 
             using T = component_type;
             using namespace std;
-////////////////////////////////////////////////////////////////////////
 
             const Quaternion<component_type> &q = aRotation;
             
@@ -146,35 +145,6 @@ namespace gdk
             
             m[2][1] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
             m[1][2] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
-
-////////////////////////////////////////////////////////////////////////
-            /*const Vector3<T> euler = aRotation.toEuler();
-
-            T c1 = cos(-euler.x);
-            T c2 = cos(-euler.y);
-            T c3 = cos(-euler.z);
-            
-            T s1 = sin(-euler.x);
-            T s2 = sin(-euler.y);
-            T s3 = sin(-euler.z);
-
-            m[0][0] =  c2 * c3;
-            m[0][1] = -c1 * s3 + s1 * s2 * c3;
-            m[0][2] =  s1 * s3 + c1 * s2 * c3;
-            m[0][3] =  m[0][3];
-            m[1][0] =  c2 * s3;
-            m[1][1] =  c1 * c3 + s1 * s2 * s3;
-            m[1][2] = -s1 * c3 + c1 * s2 * s3;
-            m[1][3] =  m[1][3];
-            m[2][0] = -s2;
-            m[2][1] =  s1 * c2;
-            m[2][2] =  c1 * c2;
-            m[2][3] =  m[2][3]; 
-            m[3][0] =  m[3][0]; 
-            m[3][1] =  m[3][1]; 
-            m[3][2] =  m[3][2]; 
-            m[3][3] =  m[3][3];*/
-////////////////////////////////////////////////////////////////////////
         }
 
         //! apply a scale to the matrix
@@ -201,10 +171,25 @@ namespace gdk
         //! transpose the matrix in place
         void transpose()
         {
-            component_type t00 = m[0][0]; component_type t10 = m[0][1]; component_type t20 = m[0][2]; component_type t30 = m[0][3];
-            component_type t01 = m[1][0]; component_type t11 = m[1][1]; component_type t21 = m[1][2]; component_type t31 = m[1][3];
-            component_type t02 = m[2][0]; component_type t12 = m[2][1]; component_type t22 = m[2][2]; component_type t32 = m[2][3];
-            component_type t03 = m[3][0]; component_type t13 = m[3][1]; component_type t23 = m[3][2]; component_type t33 = m[3][3];
+            component_type t00 = m[0][0]; 
+            component_type t10 = m[0][1]; 
+            component_type t20 = m[0][2]; 
+            component_type t30 = m[0][3];
+
+            component_type t01 = m[1][0]; 
+            component_type t11 = m[1][1]; 
+            component_type t21 = m[1][2]; 
+            component_type t31 = m[1][3];
+
+            component_type t02 = m[2][0]; 
+            component_type t12 = m[2][1]; 
+            component_type t22 = m[2][2]; 
+            component_type t32 = m[2][3];
+
+            component_type t03 = m[3][0]; 
+            component_type t13 = m[3][1]; 
+            component_type t23 = m[3][2]; 
+            component_type t33 = m[3][3];
             
             set(
                 t00, t10, t20, t30,
@@ -214,53 +199,53 @@ namespace gdk
             );
         }
 
-        //! inverse the matrix in place
+        //! calculate the inverse matrix in place
         void inverse()
         {
-                component_type s0 = m[0][0] * m[1][1] - m[1][0] * m[0][1];
-                component_type s1 = m[0][0] * m[1][2] - m[1][0] * m[0][2];
-                component_type s2 = m[0][0] * m[1][3] - m[1][0] * m[0][3];
-                component_type s3 = m[0][1] * m[1][2] - m[1][1] * m[0][2];
-                component_type s4 = m[0][1] * m[1][3] - m[1][1] * m[0][3];
-                component_type s5 = m[0][2] * m[1][3] - m[1][2] * m[0][3];
+            component_type s0 = m[0][0] * m[1][1] - m[1][0] * m[0][1];
+            component_type s1 = m[0][0] * m[1][2] - m[1][0] * m[0][2];
+            component_type s2 = m[0][0] * m[1][3] - m[1][0] * m[0][3];
+            component_type s3 = m[0][1] * m[1][2] - m[1][1] * m[0][2];
+            component_type s4 = m[0][1] * m[1][3] - m[1][1] * m[0][3];
+            component_type s5 = m[0][2] * m[1][3] - m[1][2] * m[0][3];
 
-                component_type c5 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
-                component_type c4 = m[2][1] * m[3][3] - m[3][1] * m[2][3];
-                component_type c3 = m[2][1] * m[3][2] - m[3][1] * m[2][2];
-                component_type c2 = m[2][0] * m[3][3] - m[3][0] * m[2][3];
-                component_type c1 = m[2][0] * m[3][2] - m[3][0] * m[2][2];
-                component_type c0 = m[2][0] * m[3][1] - m[3][0] * m[2][1];
+            component_type c5 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
+            component_type c4 = m[2][1] * m[3][3] - m[3][1] * m[2][3];
+            component_type c3 = m[2][1] * m[3][2] - m[3][1] * m[2][2];
+            component_type c2 = m[2][0] * m[3][3] - m[3][0] * m[2][3];
+            component_type c1 = m[2][0] * m[3][2] - m[3][0] * m[2][2];
+            component_type c0 = m[2][0] * m[3][1] - m[3][0] * m[2][1];
 
-                component_type invdet = component_type(1) / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
+            component_type invdet = component_type(1) / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
 
-                component_type b[RowOrColumnCount][RowOrColumnCount];
+            component_type b[order][order];
 
-                b[0][0] = (m[1][1] * c5 - m[1][2] * c4 + m[1][3] * c3) * invdet;
-                b[0][1] = (-m[0][1] * c5 + m[0][2] * c4 - m[0][3] * c3) * invdet;
-                b[0][2] = (m[3][1] * s5 - m[3][2] * s4 + m[3][3] * s3) * invdet;
-                b[0][3] = (-m[2][1] * s5 + m[2][2] * s4 - m[2][3] * s3) * invdet;
+            b[0][0] = (m[1][1] * c5 - m[1][2] * c4 + m[1][3] * c3) * invdet;
+            b[0][1] = (-m[0][1] * c5 + m[0][2] * c4 - m[0][3] * c3) * invdet;
+            b[0][2] = (m[3][1] * s5 - m[3][2] * s4 + m[3][3] * s3) * invdet;
+            b[0][3] = (-m[2][1] * s5 + m[2][2] * s4 - m[2][3] * s3) * invdet;
 
-                b[1][0] = (-m[1][0] * c5 + m[1][2] * c2 - m[1][3] * c1) * invdet;
-                b[1][1] = (m[0][0] * c5 - m[0][2] * c2 + m[0][3] * c1) * invdet;
-                b[1][2] = (-m[3][0] * s5 + m[3][2] * s2 - m[3][3] * s1) * invdet;
-                b[1][3] = (m[2][0] * s5 - m[2][2] * s2 + m[2][3] * s1) * invdet;
+            b[1][0] = (-m[1][0] * c5 + m[1][2] * c2 - m[1][3] * c1) * invdet;
+            b[1][1] = (m[0][0] * c5 - m[0][2] * c2 + m[0][3] * c1) * invdet;
+            b[1][2] = (-m[3][0] * s5 + m[3][2] * s2 - m[3][3] * s1) * invdet;
+            b[1][3] = (m[2][0] * s5 - m[2][2] * s2 + m[2][3] * s1) * invdet;
 
-                b[2][0] = (m[1][0] * c4 - m[1][1] * c2 + m[1][3] * c0) * invdet;
-                b[2][1] = (-m[0][0] * c4 + m[0][1] * c2 - m[0][3] * c0) * invdet;
-                b[2][2] = (m[3][0] * s4 - m[3][1] * s2 + m[3][3] * s0) * invdet;
-                b[2][3] = (-m[2][0] * s4 + m[2][1] * s2 - m[2][3] * s0) * invdet;
+            b[2][0] = (m[1][0] * c4 - m[1][1] * c2 + m[1][3] * c0) * invdet;
+            b[2][1] = (-m[0][0] * c4 + m[0][1] * c2 - m[0][3] * c0) * invdet;
+            b[2][2] = (m[3][0] * s4 - m[3][1] * s2 + m[3][3] * s0) * invdet;
+            b[2][3] = (-m[2][0] * s4 + m[2][1] * s2 - m[2][3] * s0) * invdet;
 
-                b[3][0] = (-m[1][0] * c3 + m[1][1] * c1 - m[1][2] * c0) * invdet;
-                b[3][1] = (m[0][0] * c3 - m[0][1] * c1 + m[0][2] * c0) * invdet;
-                b[3][2] = (-m[3][0] * s3 + m[3][1] * s1 - m[3][2] * s0) * invdet;
-                b[3][3] = (m[2][0] * s3 - m[2][1] * s1 + m[2][2] * s0) * invdet;
+            b[3][0] = (-m[1][0] * c3 + m[1][1] * c1 - m[1][2] * c0) * invdet;
+            b[3][1] = (m[0][0] * c3 - m[0][1] * c1 + m[0][2] * c0) * invdet;
+            b[3][2] = (-m[3][0] * s3 + m[3][1] * s1 - m[3][2] * s0) * invdet;
+            b[3][3] = (m[2][0] * s3 - m[2][1] * s1 + m[2][2] * s0) * invdet;
 
-                set(
-                        b[0][0], b[0][1], b[0][2], b[0][3],
-                        b[1][0], b[1][1], b[1][2], b[1][3],
-                        b[2][0], b[2][1], b[2][2], b[2][3],
-                        b[3][0], b[3][1], b[3][2], b[3][3]
-                );
+            set(
+                b[0][0], b[0][1], b[0][2], b[0][3],
+                b[1][0], b[1][1], b[1][2], b[1][3],
+                b[2][0], b[2][1], b[2][2], b[2][3],
+                b[3][0], b[3][1], b[3][2], b[3][3]
+            );
         }
 
         //! assign values to all 16 elements of the matrix
@@ -324,7 +309,7 @@ namespace gdk
 
         bool operator==(const Mat4x4<component_type> &other) const
         {
-            for(size_type i = 0; i < RowOrColumnCount; ++i) for (size_type j = 0; j < RowOrColumnCount; ++j)
+            for(order_type i = 0; i < order; ++i) for (order_type j = 0; j < order; ++j)
                 if (m[i][j] != other.m[i][j])
                     return false;
 
