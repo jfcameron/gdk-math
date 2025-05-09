@@ -3,30 +3,30 @@
 #ifndef GDK_MATH_MAT4X4_H
 #define GDK_MATH_MAT4X4_H
 
-#include <iosfwd>
-#include <type_traits>
-
+#include <gdk/quaternion.h>
 #include <gdk/vector2.h>
 #include <gdk/vector3.h>
-#include <gdk/quaternion.h>
+
+#include <cmath>
+#include <iosfwd>
+#include <type_traits>
 
 namespace gdk
 {
     /// \brief 4 by 4 matrix of floating point numbers, used to calculate 3D transformations and camera projections.
     template<typename component_type_param = float>
-    struct Mat4x4 final
-    {
+    struct Mat4x4 final {
         using component_type = component_type_param;
+        using order_type = char;
+        using quaternion_type = Quaternion<component_type_param>;
+        using vector2_type = Vector2<component_type_param>;
+        using vector3_type = Vector3<component_type_param>;
 
         static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
         
-        using order_type = char;
-
         static constexpr order_type order = 4;
 
-        //! the 16 Ts of data, arranged in 2d grid
-        component_type m[order][order] =  
-        {
+        component_type m[order][order] =  {
             {1.,0.,0.,0.},
             {0.,1.,0.,0.},
             {0.,0.,1.,0.},
@@ -34,23 +34,22 @@ namespace gdk
         };
 
         //! Sets matrix to an identity matrix
-        void setToIdentity() 
-        {
+        void setToIdentity() {
             m[0][0] = 1.; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
             m[0][1] = 0.; m[1][1] = 1.; m[2][1] = 0.; m[3][1] = 0.;
             m[0][2] = 0.; m[1][2] = 0.; m[2][2] = 1.; m[3][2] = 0.;
             m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;    
         }
 
-        //! Sets matrix to an orthographic projection matrix, typically used to render a 2D scene or to render maps (lighting, depth) of a 3D scene
+        //! Sets matrix to an orthographic projection matrix
         void setToOrthographic(
-            const gdk::Vector2<component_type> &aOrthoSize, 
+            const vector2_type &aOrthoSize, 
             const component_type aNearClippingPlane, 
             const component_type aFarClippingPlane, 
             const component_type aViewportAspectRatio)
         {
-            const component_type x = aOrthoSize.x / aViewportAspectRatio;
-            const component_type y = aOrthoSize.y;
+            const component_type x = aOrthoSize.x * 2 / aViewportAspectRatio;
+            const component_type y = aOrthoSize.y * 2;
             const component_type n = -(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
             const component_type f = -2.0f * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
 
@@ -60,14 +59,14 @@ namespace gdk
             m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;
         }
 
-        //! Sets matrix to a perspective projection matrix, typically used to render a 3D scene
+        //! Sets matrix to a perspective projection matrix
         void setToPerspective(
             const component_type aFieldOfView, 
             const component_type aNearClippingPlane, 
             const component_type aFarClippingPlane, 
             const component_type aViewportAspectRatio)
         {
-            float tanHalfFovy = static_cast<float>(tan(aFieldOfView * 0.5f));
+            component_type tanHalfFovy = static_cast<component_type>(tan(aFieldOfView * 0.5f));
 
             m[0][0] = 1.0f / (aViewportAspectRatio * tanHalfFovy);
             m[0][1] = 0.0f;
@@ -91,8 +90,7 @@ namespace gdk
         }
 
         //! apply a translation to the matrix
-        void translate(const Vector3<component_type> &aTranslation)
-        {
+        void translate(const vector3_type &aTranslation) {
             m[3][0] = m[0][0] * aTranslation.x + m[1][0] * aTranslation.y + m[2][0] * aTranslation.z + m[3][0];
             m[3][1] = m[0][1] * aTranslation.x + m[1][1] * aTranslation.y + m[2][1] * aTranslation.z + m[3][1];
             m[3][2] = m[0][2] * aTranslation.x + m[1][2] * aTranslation.y + m[2][2] * aTranslation.z + m[3][2];
@@ -100,18 +98,48 @@ namespace gdk
         }
 
         //! get the translation vector from this matrix
-        Vector3<component_type> translation() const
-        {
-            return Vector3<component_type>(m[3][0], m[3][1], m[3][2]);
+        vector3_type translation() const {
+            return vector3_type(m[3][0], m[3][1], m[3][2]);
+        }
+
+        //! get a rotation quaternion from this matrix
+        quaternion_type rotation() const {
+            component_type t{};
+            quaternion_type q{};
+
+            if (m[2][2] < 0) {
+                if (m[0][0] > m[1][1]) {
+                    t = 1 + m[0][0] - m[1][1] - m[2][2];
+                    q = quaternion_type(t, m[0][1] + m[1][0], m[2][0] + m[0][2], m[1][2] - m[2][1]);
+                }
+                else {
+                    t = 1 - m[0][0] + m[1][1] - m[2][2];
+                    q = quaternion_type(m[0][1] + m[1][0], t, m[1][2] + m[2][1], m[2][0] - m[0][2]);
+                }
+            }
+            else {
+                if (m[0][0] < - m[1][1]) {
+                    t = 1 - m[0][0] - m[1][1] + m[2][2];
+                    q = quaternion_type(m[2][0] + m[0][2], m[1][2] + m[2][1], t, m[0][1] - m[1][0]);
+                }
+                else {
+                    t = 1 + m[0][0] + m[1][1] + m[2][2];
+                    q = quaternion_type(m[1][2] - m[2][1], m[2][0] - m[0][2], m[0][1] - m[1][0], t);
+                }
+            }
+
+            q *= 0.5 / sqrt(t);
+
+            q = {q.toEuler() * - 1};
+
+            return q;
         }
 
         //! apply a rotation to the matrix
         template<typename high_precision_buffer_type = long double>
-        void rotate(const Quaternion<component_type> &aRotation)
-        {
+        void rotate(const quaternion_type &aRotation) {
             static_assert(std::is_floating_point<high_precision_buffer_type>::value, "high_precision_buffer_type must be a floating point type");
 
-            using T = component_type;
             using namespace std;
 
             const Quaternion<component_type> &q = aRotation;
@@ -121,10 +149,9 @@ namespace gdk
             high_precision_buffer_type sqy = q.y * q.y;
             high_precision_buffer_type sqz = q.z * q.z;
             
-            // invs (inverse square length) is only required if quaternion is not already normalised
             high_precision_buffer_type invs = 1 / (sqx + sqy + sqz + sqw);
             
-            m[0][0] = ( sqx - sqy - sqz + sqw) * invs ; // since sqw + sqx + sqy + sqz =1/invs*invs
+            m[0][0] = ( sqx - sqy - sqz + sqw) * invs ; 
             m[1][1] = (-sqx + sqy - sqz + sqw) * invs ;
             m[2][2] = (-sqx - sqy + sqz + sqw) * invs ;
             
@@ -148,8 +175,7 @@ namespace gdk
         }
 
         //! apply a scale to the matrix
-        void scale(const Vector3<component_type> &aScale)
-        {
+        void scale(const vector3_type &aScale) {
             m[0][0] = m[0][0] * aScale.x;
             m[0][1] = m[0][1] * aScale.x;
             m[0][2] = m[0][2] * aScale.x;
@@ -169,8 +195,7 @@ namespace gdk
         }
 
         //! transpose the matrix in place
-        void transpose()
-        {
+        void transpose() {
             component_type t00 = m[0][0]; 
             component_type t10 = m[0][1]; 
             component_type t20 = m[0][2]; 
@@ -199,9 +224,8 @@ namespace gdk
             );
         }
 
-        //! calculate the inverse matrix in place
-        void inverse()
-        {
+        //! convert this matrix to its inverse
+        void inverse() {
             component_type s0 = m[0][0] * m[1][1] - m[1][0] * m[0][1];
             component_type s1 = m[0][0] * m[1][2] - m[1][0] * m[0][2];
             component_type s2 = m[0][0] * m[1][3] - m[1][0] * m[0][3];
@@ -330,9 +354,9 @@ namespace gdk
         {}
 
         Mat4x4<component_type>(
-            const Vector3<component_type> &aWorldPos, 
+            const vector3_type &aWorldPos, 
             const Quaternion<component_type> &aRotation, 
-            const Vector3<component_type> &aScale)
+            const vector3_type &aScale)
         {
             setToIdentity();
             translate(aWorldPos);
@@ -345,14 +369,12 @@ namespace gdk
         Mat4x4<component_type>(Mat4x4<component_type>&&) = default;
         ~Mat4x4<component_type>() = default;
 
-        //! multiplicative identity matrix
         static const Mat4x4<component_type> Identity; 
     };
 
     template<typename component_type> const Mat4x4<component_type> Mat4x4<component_type>::Identity = Mat4x4<component_type>();
         
-    template <typename T> std::ostream& operator<< (std::ostream& s, const gdk::Mat4x4<T> &mat)
-    {
+    template <typename T> std::ostream& operator<< (std::ostream& s, const gdk::Mat4x4<T> &mat) {
         return s
             << "{ " << mat.m[0][0] << ", " << mat.m[1][0] << ", " << mat.m[2][0] << ", " << mat.m[3][0] << "}\n"
             << "{ " << mat.m[0][1] << ", " << mat.m[1][1] << ", " << mat.m[2][1] << ", " << mat.m[3][1] << "}\n"

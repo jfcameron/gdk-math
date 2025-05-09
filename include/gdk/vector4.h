@@ -1,34 +1,29 @@
-// © 2018 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - All Rights Reserved
 
 #ifndef GDK_MATH_VECTOR4_H
 #define GDK_MATH_VECTOR4_H
 
-#include <iosfwd>
-
 #include <gdk/vector3.h>
 
-namespace gdk
-{
+#include <iosfwd>
+
+namespace gdk {
     /// \brief Like Vector3<component_type> but allows w to != 1. Used in Vector vs Mat4x4 operations
     template<typename component_type_param = float>
-    struct Vector4 final
-    {
+    struct Vector4 final {
         using component_type = component_type_param;
 
         float x = {0.}, y = {0.}, z = {0.}, w = {1.};
             
-        bool operator==(const Vector4<component_type> &other) const
-        {
+        bool operator==(const Vector4<component_type> &other) const {
             return x == other.x && y == other.y && z == other.z && w == other.w;
         }
 
-        bool operator!=(const Vector4<component_type> &other) const
-        {
+        bool operator!=(const Vector4<component_type> &other) const {
             return x != other.x || y != other.y || z != other.z || w != other.w;
         } 
 
-        Vector4<component_type> &operator+=(const Vector4<component_type> &other)
-        {
+        Vector4<component_type> &operator+=(const Vector4<component_type> &other) {
             x += other.x;
             y += other.y;
             z += other.z;
@@ -37,8 +32,7 @@ namespace gdk
             return *this;
         }
 
-        Vector4<component_type> &operator*=(const float &aScalar)
-        {
+        Vector4<component_type> &operator*=(const float &aScalar) {
             x *= aScalar;
             y *= aScalar;
             z *= aScalar;
@@ -79,10 +73,10 @@ namespace gdk
 
     template<typename T> const Vector4<T> Vector4<T>::Zero = {0., 0., 0., 0.};
     
-    template<typename T> std::ostream &operator<< (std::ostream &s, const Vector4<T> &vector)
-    {
+    template<typename T> std::ostream &operator<< (std::ostream &s, const Vector4<T> &vector) {
         return s << "{x: " << vector.x << ", y: " << vector.y << ", z: " << vector.z << ", w: " << vector.w << "}";
     }
 }
 
 #endif
+
