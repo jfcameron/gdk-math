@@ -20,12 +20,9 @@ jfc_project(library
 
     PUBLIC_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${glm_INCLUDE_DIR}
         
     PRIVATE_INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-
-        ${nlohmann_INCLUDE_DIR}
 
     SOURCE_LIST
         ${CMAKE_CURRENT_SOURCE_DIR}/src/intvector2.cpp
