@@ -1,4 +1,4 @@
-# © 2018 Joseph Cameron - All Rights Reserved
+# © Joseph Cameron - All Rights Reserved
 
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
@@ -23,7 +23,7 @@ jfc_project(library
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include
 
     SOURCE_LIST
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/intvector2.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/nil.cpp
 )
 
 if (JFC_BUILD_TESTS)

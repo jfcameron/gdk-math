@@ -46,6 +46,31 @@ namespace gdk {
 
             return std::sqrt(a + b + c);
         }
+
+        //! returns a new vector containing the element-wise product of this vector and another
+        template<class other_component_type = component_type>
+        Vector3<component_type> elementwise_product(const Vector3<other_component_type> &aOther) const {
+            return { 
+                x * static_cast<component_type>(aOther.x), 
+                y * static_cast<component_type>(aOther.y), 
+                z * static_cast<component_type>(aOther.z)};
+        }
+
+        //! calculate the dot product of this and another vector
+        template<class precision_type = component_type>
+        precision_type dot_product(const Vector3<component_type> &other) const {
+            return { x * other.x + y * other.y + z * other.z };
+        }
+
+        //! calculate the cross product of this and another vector
+        template<class precision_type = component_type>
+        Vector3<precision_type> cross_product(const Vector3<component_type> &other) const {
+            return { 
+                y * other.z - z * other.y,
+                z * other.x - x * other.z,
+                x * other.y - y * other.x
+            };
+        }
             
         bool operator==(const Vector3<component_type> &other) const {
             return x == other.x && y == other.y && z == other.z;
@@ -138,10 +163,6 @@ namespace gdk {
     template <typename T> const Vector3<T> Vector3<T>::Right    = { 1, 0, 0};
     template <typename T> const Vector3<T> Vector3<T>::Up       = { 0, 1, 0};
     template <typename T> const Vector3<T> Vector3<T>::Zero     = { 0, 0, 0};
-
-    template <typename T> std::ostream &operator<< (std::ostream &s, const gdk::Vector3<T> &vector) {
-        return s << "{x: " << vector.x << ", " << "y: " << vector.y << ", " << "z: " << vector.z << "}";
-    }
 }
 
 #endif
