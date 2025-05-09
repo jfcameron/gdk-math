@@ -8,8 +8,6 @@ option(JFC_BUILD_APP   "Build the app" ON)
 option(JFC_BUILD_DOCS  "Build documentation" ON)
 option(JFC_BUILD_TESTS "Build unit tests" ON)
 
-add_subdirectory(thirdparty)
-
 jfc_project(library
     NAME "gdkmath"
     VERSION 0.0
