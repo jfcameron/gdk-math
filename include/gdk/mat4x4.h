@@ -6,27 +6,31 @@
 #include <gdk/quaternion.h>
 #include <gdk/vector2.h>
 #include <gdk/vector3.h>
+#include <gdk/vector4.h>
 
 #include <cmath>
 #include <iosfwd>
 #include <type_traits>
 
-namespace gdk
-{
-    /// \brief 4 by 4 matrix of floating point numbers, used to calculate 3D transformations and camera projections.
-    template<typename component_type_param = float>
-    struct Mat4x4 final {
+namespace gdk {
+    /// \brief 4 by 4 matrix used to calculate 3D transformations and camera projections.
+    /// - the matrix assumes opengl style "right handedness": +X is right, +Y is up, -Z is forward. 
+    /// - the matrix is row-major
+    template<typename component_type_param>
+    struct matrix4x4 final {
         using component_type = component_type_param;
         using order_type = char;
-        using quaternion_type = Quaternion<component_type_param>;
+        using quaternion_type = quaternion<component_type_param>;
         using vector2_type = Vector2<component_type_param>;
-        using vector3_type = Vector3<component_type_param>;
+        using vector3_type = vector3<component_type_param>;
 
         static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
         
-        static constexpr order_type order = 4;
+        static constexpr order_type order{4};
 
-        component_type m[order][order] =  {
+        static const matrix4x4<component_type> identity; 
+
+        component_type m[order][order] = {
             {1.,0.,0.,0.},
             {0.,1.,0.,0.},
             {0.,0.,1.,0.},
@@ -34,24 +38,20 @@ namespace gdk
         };
 
         //! Sets matrix to an identity matrix
-        void setToIdentity() {
-            m[0][0] = 1.; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
-            m[0][1] = 0.; m[1][1] = 1.; m[2][1] = 0.; m[3][1] = 0.;
-            m[0][2] = 0.; m[1][2] = 0.; m[2][2] = 1.; m[3][2] = 0.;
-            m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;    
+        void set_to_identity() {
+            *this = matrix4x4<component_type>::identity;
         }
 
         //! Sets matrix to an orthographic projection matrix
-        void setToOrthographic(
+        void set_to_orthographic(
             const vector2_type &aOrthoSize, 
             const component_type aNearClippingPlane, 
             const component_type aFarClippingPlane, 
-            const component_type aViewportAspectRatio)
-        {
-            const component_type x = aOrthoSize.x * 2 / aViewportAspectRatio;
-            const component_type y = aOrthoSize.y * 2;
-            const component_type n = -(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
-            const component_type f = -2.0f * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
+            const component_type aViewportAspectRatio) {
+            const auto x = aOrthoSize.x * 2 / aViewportAspectRatio;
+            const auto y = aOrthoSize.y * 2;
+            const auto n = -(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
+            const auto f = -2.0f * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
 
             m[0][0] = x ; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
             m[0][1] = 0.; m[1][1] = y ; m[2][1] = 0.; m[3][1] = 0.;
@@ -60,103 +60,120 @@ namespace gdk
         }
 
         //! Sets matrix to a perspective projection matrix
-        void setToPerspective(
+        void set_to_perspective(
             const component_type aFieldOfView, 
             const component_type aNearClippingPlane, 
             const component_type aFarClippingPlane, 
-            const component_type aViewportAspectRatio)
-        {
-            component_type tanHalfFovy = static_cast<component_type>(tan(aFieldOfView * 0.5f));
+            const component_type aViewportAspectRatio) {
+            const auto tanHalfFovy = static_cast<component_type>(tan(aFieldOfView * 0.5));
 
-            m[0][0] = 1.0f / (aViewportAspectRatio * tanHalfFovy);
-            m[0][1] = 0.0f;
-            m[0][2] = 0.0f;
-            m[0][3] = 0.0f;
+            m[0][0] = 1.0 / (aViewportAspectRatio * tanHalfFovy);
+            m[0][1] = 0.0;
+            m[0][2] = 0.0;
+            m[0][3] = 0.0;
 
-            m[1][0] = 0.0f;
-            m[1][1] = 1.0f / tanHalfFovy;
-            m[1][2] = 0.0f;
-            m[1][3] = 0.0f;
+            m[1][0] = 0.0;
+            m[1][1] = 1.0 / tanHalfFovy;
+            m[1][2] = 0.0;
+            m[1][3] = 0.0;
 
-            m[2][0] = 0.0f;
-            m[2][1] = 0.0f;
+            m[2][0] = 0.0;
+            m[2][1] = 0.0;
             m[2][2] =-(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
-            m[2][3] =-1.0f;
+            m[2][3] =-1.0;
 
-            m[3][0] = 0.0f;
-            m[3][1] = 0.0f;
-            m[3][2] =-2.0f * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
-            m[3][3] = 0.0f;
+            m[3][0] = 0.0;
+            m[3][1] = 0.0;
+            m[3][2] =-2.0 * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
+            m[3][3] = 0.0;
         }
 
-        //! apply a translation to the matrix
-        void translate(const vector3_type &aTranslation) {
-            m[3][0] = m[0][0] * aTranslation.x + m[1][0] * aTranslation.y + m[2][0] * aTranslation.z + m[3][0];
-            m[3][1] = m[0][1] * aTranslation.x + m[1][1] * aTranslation.y + m[2][1] * aTranslation.z + m[3][1];
-            m[3][2] = m[0][2] * aTranslation.x + m[1][2] * aTranslation.y + m[2][2] * aTranslation.z + m[3][2];
-            m[3][3] = m[0][3] * aTranslation.x + m[1][3] * aTranslation.y + m[2][3] * aTranslation.z + m[3][3];
+        //! set the translation components directly
+        void set_translation(const vector3_type &aTranslation) {
+            // Only modify the translation components in column 3
+            m[3][0] = aTranslation.x;
+            m[3][1] = aTranslation.y;
+            m[3][2] = aTranslation.z;
         }
 
         //! get the translation vector from this matrix
         vector3_type translation() const {
-            return vector3_type(m[3][0], m[3][1], m[3][2]);
+            return vector3_type(
+                m[3][0], 
+                m[3][1], 
+                m[3][2]);
         }
 
-        //! get a rotation quaternion from this matrix
+        //! get the rotation as a quaternion
         quaternion_type rotation() const {
-            component_type t{};
-            quaternion_type q{};
+            vector3_type scale = this->scale();
+            std::array<component_type *, 3> scaleAsArray { &scale.x, &scale.y, &scale.z };
 
-            if (m[2][2] < 0) {
-                if (m[0][0] > m[1][1]) {
-                    t = 1 + m[0][0] - m[1][1] - m[2][2];
-                    q = quaternion_type(t, m[0][1] + m[1][0], m[2][0] + m[0][2], m[1][2] - m[2][1]);
-                }
-                else {
-                    t = 1 - m[0][0] + m[1][1] - m[2][2];
-                    q = quaternion_type(m[0][1] + m[1][0], t, m[1][2] + m[2][1], m[2][0] - m[0][2]);
+            matrix4x4<component_type> normalizedMatrix = *this;
+            for (order_type i{0}; i < 3; ++i) {
+                for (order_type j{0}; j < 3; ++j) {
+                    normalizedMatrix.m[i][j] /= *scaleAsArray[i];
                 }
             }
+
+            component_type trace = normalizedMatrix.m[0][0] + normalizedMatrix.m[1][1] + normalizedMatrix.m[2][2];
+            quaternion_type q;
+
+            if (trace > 0) {
+                component_type s = 0.5 / std::sqrt(trace + 1.0);
+                q.w = 0.25 / s;
+                q.x = (normalizedMatrix.m[2][1] - normalizedMatrix.m[1][2]) * s;
+                q.y = (normalizedMatrix.m[0][2] - normalizedMatrix.m[2][0]) * s;
+                q.z = (normalizedMatrix.m[1][0] - normalizedMatrix.m[0][1]) * s;
+            } 
             else {
-                if (m[0][0] < - m[1][1]) {
-                    t = 1 - m[0][0] - m[1][1] + m[2][2];
-                    q = quaternion_type(m[2][0] + m[0][2], m[1][2] + m[2][1], t, m[0][1] - m[1][0]);
-                }
+                if (normalizedMatrix.m[0][0] > normalizedMatrix.m[1][1] && normalizedMatrix.m[0][0] > normalizedMatrix.m[2][2]) {
+                    component_type s = 2.0 * std::sqrt(1.0 + normalizedMatrix.m[0][0] - normalizedMatrix.m[1][1] - normalizedMatrix.m[2][2]);
+                    q.w = (normalizedMatrix.m[2][1] - normalizedMatrix.m[1][2]) / s;
+                    q.x = 0.25 * s;
+                    q.y = (normalizedMatrix.m[0][1] + normalizedMatrix.m[1][0]) / s;
+                    q.z = (normalizedMatrix.m[0][2] + normalizedMatrix.m[2][0]) / s;
+                } 
+                else if (normalizedMatrix.m[1][1] > normalizedMatrix.m[2][2]) {
+                    component_type s = 2.0 * std::sqrt(1.0 + normalizedMatrix.m[1][1] - normalizedMatrix.m[0][0] - normalizedMatrix.m[2][2]);
+                    q.w = (normalizedMatrix.m[0][2] - normalizedMatrix.m[2][0]) / s;
+                    q.x = (normalizedMatrix.m[0][1] + normalizedMatrix.m[1][0]) / s;
+                    q.y = 0.25 * s;
+                    q.z = (normalizedMatrix.m[1][2] + normalizedMatrix.m[2][1]) / s;
+                } 
                 else {
-                    t = 1 + m[0][0] + m[1][1] + m[2][2];
-                    q = quaternion_type(m[1][2] - m[2][1], m[2][0] - m[0][2], m[0][1] - m[1][0], t);
+                    component_type s = 2.0 * std::sqrt(1.0 + normalizedMatrix.m[2][2] - normalizedMatrix.m[0][0] - normalizedMatrix.m[1][1]);
+                    q.w = (normalizedMatrix.m[1][0] - normalizedMatrix.m[0][1]) / s;
+                    q.x = (normalizedMatrix.m[0][2] + normalizedMatrix.m[2][0]) / s;
+                    q.y = (normalizedMatrix.m[1][2] + normalizedMatrix.m[2][1]) / s;
+                    q.z = 0.25 * s;
                 }
             }
 
-            q *= 0.5 / sqrt(t);
-
-            q = {q.toEuler() * - 1};
+            q.z = -q.z; // opengl right-handed convention 
 
             return q;
         }
 
-        //! apply a rotation to the matrix
-        template<typename high_precision_buffer_type = long double>
-        void rotate(const quaternion_type &aRotation) {
-            static_assert(std::is_floating_point<high_precision_buffer_type>::value, "high_precision_buffer_type must be a floating point type");
-
+        //! set the rotation component directly
+        void set_rotation(const quaternion_type &aRotation, const vector3_type &aScale = {1}) {
             using namespace std;
 
-            const Quaternion<component_type> &q = aRotation;
+            const quaternion_type &q = aRotation;
             
-            high_precision_buffer_type sqw = q.w * q.w;
-            high_precision_buffer_type sqx = q.x * q.x;
-            high_precision_buffer_type sqy = q.y * q.y;
-            high_precision_buffer_type sqz = q.z * q.z;
+            const auto sqw = q.w * q.w;
+            const auto sqx = q.x * q.x;
+            const auto sqy = q.y * q.y;
+            const auto sqz = q.z * q.z;
             
-            high_precision_buffer_type invs = 1 / (sqx + sqy + sqz + sqw);
+            const auto invs = 1 / (sqx + sqy + sqz + sqw);
             
             m[0][0] = ( sqx - sqy - sqz + sqw) * invs ; 
             m[1][1] = (-sqx + sqy - sqz + sqw) * invs ;
             m[2][2] = (-sqx - sqy + sqz + sqw) * invs ;
             
-            high_precision_buffer_type tmp1 = q.x * q.y;
-            high_precision_buffer_type tmp2 = q.z * q.w;
+            auto tmp1 = q.x * q.y;
+            auto tmp2 = q.z * q.w;
             
             m[1][0] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
             m[0][1] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
@@ -172,57 +189,42 @@ namespace gdk
             
             m[2][1] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
             m[1][2] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
-        }
 
-        //! apply a scale to the matrix
-        void scale(const vector3_type &aScale) {
-            m[0][0] = m[0][0] * aScale.x;
-            m[0][1] = m[0][1] * aScale.x;
-            m[0][2] = m[0][2] * aScale.x;
-            m[0][3] = m[0][3] * aScale.x;
-            m[1][0] = m[1][0] * aScale.y;
-            m[1][1] = m[1][1] * aScale.y;
-            m[1][2] = m[1][2] * aScale.y;
-            m[1][3] = m[1][3] * aScale.y;
-            m[2][0] = m[2][0] * aScale.z;
-            m[2][1] = m[2][1] * aScale.z;
-            m[2][2] = m[2][2] * aScale.z;
-            m[2][3] = m[2][3] * aScale.z;
-            m[3][0] = m[3][0];
-            m[3][1] = m[3][1];
-            m[3][2] = m[3][2];
-            m[3][3] = m[3][3];
+            m[0][0] *= aScale.x;
+            m[0][1] *= aScale.x;
+            m[0][2] *= aScale.x;
+
+            m[1][0] *= aScale.y;
+            m[1][1] *= aScale.y;
+            m[1][2] *= aScale.y;
+
+            m[2][0] *= aScale.z;
+            m[2][1] *= aScale.z;
+            m[2][2] *= aScale.z;
         }
 
         //! transpose the matrix in place
         void transpose() {
-            component_type t00 = m[0][0]; 
-            component_type t10 = m[0][1]; 
-            component_type t20 = m[0][2]; 
-            component_type t30 = m[0][3];
+            component_type temp[4][4];
 
-            component_type t01 = m[1][0]; 
-            component_type t11 = m[1][1]; 
-            component_type t21 = m[1][2]; 
-            component_type t31 = m[1][3];
+            for (order_type i{0}; i < 4; ++i) 
+                for (order_type j{0}; j < 4; ++j) 
+                    temp[j][i] = m[i][j];
 
-            component_type t02 = m[2][0]; 
-            component_type t12 = m[2][1]; 
-            component_type t22 = m[2][2]; 
-            component_type t32 = m[2][3];
-
-            component_type t03 = m[3][0]; 
-            component_type t13 = m[3][1]; 
-            component_type t23 = m[3][2]; 
-            component_type t33 = m[3][3];
-            
             set(
-                t00, t10, t20, t30,
-                t01, t11, t21, t31,
-                t02, t12, t22, t32,
-                t03, t13, t23, t33
+                temp[0][0], temp[0][1], temp[0][2], temp[0][3],
+                temp[1][0], temp[1][1], temp[1][2], temp[1][3],
+                temp[2][0], temp[2][1], temp[2][2], temp[2][3],
+                temp[3][0], temp[3][1], temp[3][2], temp[3][3]
             );
         }
+
+        //! get the transpose matrix 
+        matrix4x4<component_type> transpose() const {
+            matrix4x4<component_type> a = *this;
+            a.transpose();
+            return a;
+        };
 
         //! convert this matrix to its inverse
         void inverse() {
@@ -244,25 +246,25 @@ namespace gdk
 
             component_type b[order][order];
 
-            b[0][0] = (m[1][1] * c5 - m[1][2] * c4 + m[1][3] * c3) * invdet;
+            b[0][0] = ( m[1][1] * c5 - m[1][2] * c4 + m[1][3] * c3) * invdet;
             b[0][1] = (-m[0][1] * c5 + m[0][2] * c4 - m[0][3] * c3) * invdet;
-            b[0][2] = (m[3][1] * s5 - m[3][2] * s4 + m[3][3] * s3) * invdet;
+            b[0][2] = ( m[3][1] * s5 - m[3][2] * s4 + m[3][3] * s3) * invdet;
             b[0][3] = (-m[2][1] * s5 + m[2][2] * s4 - m[2][3] * s3) * invdet;
 
             b[1][0] = (-m[1][0] * c5 + m[1][2] * c2 - m[1][3] * c1) * invdet;
-            b[1][1] = (m[0][0] * c5 - m[0][2] * c2 + m[0][3] * c1) * invdet;
+            b[1][1] = ( m[0][0] * c5 - m[0][2] * c2 + m[0][3] * c1) * invdet;
             b[1][2] = (-m[3][0] * s5 + m[3][2] * s2 - m[3][3] * s1) * invdet;
-            b[1][3] = (m[2][0] * s5 - m[2][2] * s2 + m[2][3] * s1) * invdet;
+            b[1][3] = ( m[2][0] * s5 - m[2][2] * s2 + m[2][3] * s1) * invdet;
 
-            b[2][0] = (m[1][0] * c4 - m[1][1] * c2 + m[1][3] * c0) * invdet;
+            b[2][0] = ( m[1][0] * c4 - m[1][1] * c2 + m[1][3] * c0) * invdet;
             b[2][1] = (-m[0][0] * c4 + m[0][1] * c2 - m[0][3] * c0) * invdet;
-            b[2][2] = (m[3][0] * s4 - m[3][1] * s2 + m[3][3] * s0) * invdet;
+            b[2][2] = ( m[3][0] * s4 - m[3][1] * s2 + m[3][3] * s0) * invdet;
             b[2][3] = (-m[2][0] * s4 + m[2][1] * s2 - m[2][3] * s0) * invdet;
 
             b[3][0] = (-m[1][0] * c3 + m[1][1] * c1 - m[1][2] * c0) * invdet;
-            b[3][1] = (m[0][0] * c3 - m[0][1] * c1 + m[0][2] * c0) * invdet;
+            b[3][1] = ( m[0][0] * c3 - m[0][1] * c1 + m[0][2] * c0) * invdet;
             b[3][2] = (-m[3][0] * s3 + m[3][1] * s1 - m[3][2] * s0) * invdet;
-            b[3][3] = (m[2][0] * s3 - m[2][1] * s1 + m[2][2] * s0) * invdet;
+            b[3][3] = ( m[2][0] * s3 - m[2][1] * s1 + m[2][2] * s0) * invdet;
 
             set(
                 b[0][0], b[0][1], b[0][2], b[0][3],
@@ -272,24 +274,68 @@ namespace gdk
             );
         }
 
+        //! set this matrix to its inverse via a faster means but requires that the matrix is affine
+        /// affine means the matrix must only contain translations, rotations and scales.
+        void inverse_affine() { 
+            component_type rot[3][3] = {
+                { m[0][0], m[0][1], m[0][2] },
+                { m[1][0], m[1][1], m[1][2] },
+                { m[2][0], m[2][1], m[2][2] }
+            };
+
+            component_type trans[3] = { m[3][0], m[3][1], m[3][2] };
+
+            component_type rotInv[3][3] = {
+                { rot[0][0], rot[1][0], rot[2][0] },
+                { rot[0][1], rot[1][1], rot[2][1] },
+                { rot[0][2], rot[1][2], rot[2][2] }
+            };
+
+            component_type transInv[3] = {
+                -(rotInv[0][0] * trans[0] + rotInv[0][1] * trans[1] + rotInv[0][2] * trans[2]),
+                -(rotInv[1][0] * trans[0] + rotInv[1][1] * trans[1] + rotInv[1][2] * trans[2]),
+                -(rotInv[2][0] * trans[0] + rotInv[2][1] * trans[1] + rotInv[2][2] * trans[2])
+            };
+
+            set(
+                rotInv[0][0], rotInv[0][1], rotInv[0][2], 0.0,
+                rotInv[1][0], rotInv[1][1], rotInv[1][2], 0.0,
+                rotInv[2][0], rotInv[2][1], rotInv[2][2], 0.0,
+                transInv[0], transInv[1], transInv[2], 1.0
+            );
+        }
+
         //! assign values to all 16 elements of the matrix
-        Mat4x4 &set(
+        matrix4x4<component_type> &set(
             const component_type m00, const component_type m01, const component_type m02, const component_type m03, 
             const component_type m10, const component_type m11, const component_type m12, const component_type m13,
             const component_type m20, const component_type m21, const component_type m22, const component_type m23, 
-            const component_type m30, const component_type m31, const component_type m32, const component_type m33)
-        {
-            m[0][0] = m00; m[0][1] = m01; m[0][2] = m02; m[0][3] = m03;
-            m[1][0] = m10; m[1][1] = m11; m[1][2] = m12; m[1][3] = m13;
-            m[2][0] = m20; m[2][1] = m21; m[2][2] = m22; m[2][3] = m23;
-            m[3][0] = m30; m[3][1] = m31; m[3][2] = m32; m[3][3] = m33;
+            const component_type m30, const component_type m31, const component_type m32, const component_type m33) {
+            m[0][0] = m00; 
+            m[0][1] = m01; 
+            m[0][2] = m02; 
+            m[0][3] = m03;
+
+            m[1][0] = m10; 
+            m[1][1] = m11; 
+            m[1][2] = m12; 
+            m[1][3] = m13;
+
+            m[2][0] = m20; 
+            m[2][1] = m21; 
+            m[2][2] = m22; 
+            m[2][3] = m23;
+
+            m[3][0] = m30; 
+            m[3][1] = m31; 
+            m[3][2] = m32;
+            m[3][3] = m33;
             
             return *this;
         }
 
         //! multiply the matrix against another
-        Mat4x4<component_type> &multiply(const Mat4x4 &right)
-        {
+        matrix4x4<component_type> &multiply(const matrix4x4 &right) {
             set(
                 m[0][0] * right.m[0][0] + m[1][0] * right.m[0][1] + m[2][0] * right.m[0][2] + m[3][0] * right.m[0][3],
                 m[0][1] * right.m[0][0] + m[1][1] * right.m[0][1] + m[2][1] * right.m[0][2] + m[3][1] * right.m[0][3],
@@ -311,36 +357,39 @@ namespace gdk
             return *this;
         }
 
+        //! gets the scaling factor from the internal rotation matrix
+        vector3_type scale() const {
+            return {
+                std::sqrt(m[0][0] * m[0][0] + m[0][1] * m[0][1] + m[0][2] * m[0][2]),
+                std::sqrt(m[1][0] * m[1][0] + m[1][1] * m[1][1] + m[1][2] * m[1][2]),
+                std::sqrt(m[2][0] * m[2][0] + m[2][1] * m[2][1] + m[2][2] * m[2][2])
+            };
+        }
+
         //! returns a new matrix which is the result of a multiplication, without mutating this
-        Mat4x4 operator*(const Mat4x4 &other) const
-        {
-            Mat4x4 copy(*this);
-
+        matrix4x4 operator*(const matrix4x4 &other) const {
+            matrix4x4 copy(*this);
             copy *= other;
-
             return copy;
         }
 
         //! alias for multiply
-        Mat4x4& operator*=(const Mat4x4 &other)
-        {
+        matrix4x4& operator*=(const matrix4x4 &other) {
             multiply(other);
-            
             return *this;
         }
         
-        Mat4x4& operator=(const Mat4x4&) = default; 
+        matrix4x4& operator=(const matrix4x4&) = default; 
 
-        bool operator==(const Mat4x4<component_type> &other) const
-        {
-            for(order_type i = 0; i < order; ++i) for (order_type j = 0; j < order; ++j)
+        bool operator==(const matrix4x4<component_type> &other) const {
+            for(order_type i = 0; i < order; ++i) for (order_type j{0}; j < order; ++j)
                 if (m[i][j] != other.m[i][j])
                     return false;
 
             return true;
         }
             
-        Mat4x4<component_type>(
+        matrix4x4<component_type>(
             const component_type a00, const component_type a01, const component_type a02, const component_type a03, 
             const component_type a10, const component_type a11, const component_type a12, const component_type a13,
             const component_type a20, const component_type a21, const component_type a22, const component_type a23, 
@@ -353,26 +402,55 @@ namespace gdk
         ) 
         {}
 
-        Mat4x4<component_type>(
-            const vector3_type &aWorldPos, 
-            const Quaternion<component_type> &aRotation, 
-            const vector3_type &aScale)
-        {
-            setToIdentity();
-            translate(aWorldPos);
-            rotate(aRotation);
-            scale(aScale);
+        matrix4x4<component_type>(
+            const vector3_type &aTranslationComponent, 
+            const quaternion_type &aRotationComponent,
+            const vector3_type &aScale = {1}) {
+            set_to_identity();
+            set_rotation(aRotationComponent, aScale);
+            set_translation(aTranslationComponent);
         }
 
-        Mat4x4<component_type>() = default;
-        Mat4x4<component_type>(const Mat4x4<component_type>&) = default;
-        Mat4x4<component_type>(Mat4x4<component_type>&&) = default;
-        ~Mat4x4<component_type>() = default;
+        matrix4x4<component_type>() = default;
+        matrix4x4<component_type>(const matrix4x4<component_type>&) = default;
+        matrix4x4<component_type>(matrix4x4<component_type>&&) = default;
+        ~matrix4x4<component_type>() = default;
 
-        static const Mat4x4<component_type> Identity; 
     };
 
-    template<typename component_type> const Mat4x4<component_type> Mat4x4<component_type>::Identity = Mat4x4<component_type>();
+    template<typename component_type> 
+    const matrix4x4<component_type> matrix4x4<component_type>::identity = matrix4x4<component_type>();
+
+    //! multiply a 3d vector by a matrix
+    template<typename component_type> 
+    vector3<component_type> &operator*=(vector3<component_type> &aVector, matrix4x4<component_type> aMatrix) {
+        vector4<component_type> vec(aVector.x, aVector.y, aVector.z, 1.0);
+
+        aMatrix.m[0][1] = -aMatrix.m[0][1];
+        aMatrix.m[0][2] = -aMatrix.m[0][2];
+        aMatrix.m[1][0] = -aMatrix.m[1][0];
+        aMatrix.m[1][2] = -aMatrix.m[1][2];
+        aMatrix.m[2][0] = -aMatrix.m[2][0];
+        aMatrix.m[2][1] = -aMatrix.m[2][1];
+
+        const auto newX = aMatrix.m[0][0] * vec.x + aMatrix.m[1][0] * vec.y + aMatrix.m[2][0] * vec.z + aMatrix.m[3][0]; 
+        const auto newY = aMatrix.m[0][1] * vec.x + aMatrix.m[1][1] * vec.y + aMatrix.m[2][1] * vec.z + aMatrix.m[3][1];
+        const auto newZ = aMatrix.m[0][2] * vec.x + aMatrix.m[1][2] * vec.y + aMatrix.m[2][2] * vec.z + aMatrix.m[3][2];
+        const auto newW = aMatrix.m[0][3] * vec.x + aMatrix.m[1][3] * vec.y + aMatrix.m[2][3] * vec.z + aMatrix.m[3][3];
+
+        if (std::abs(newW - 1.0) > 1e-6) {
+            aVector.x = newX / newW;
+            aVector.y = newY / newW;
+            aVector.z = newZ / newW;
+        } else {
+            aVector.x = newX;
+            aVector.y = newY;
+            aVector.z = newZ;
+        }
+
+        return aVector;
+    }
 }
 
 #endif
+

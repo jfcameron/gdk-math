@@ -8,22 +8,22 @@
 #include <iosfwd>
 
 namespace gdk {
-    /// \brief Like Vector3<component_type> but allows w to != 1. Used in Vector vs Mat4x4 operations
+    /// \brief Like vector3<component_type> but allows w to != 1. Used in Vector vs matrix4x4 operations
     template<typename component_type_param = float>
-    struct Vector4 final {
+    struct vector4 final {
         using component_type = component_type_param;
 
-        float x = {0.}, y = {0.}, z = {0.}, w = {1.};
+        component_type x = {0.}, y = {0.}, z = {0.}, w = {1.};
             
-        bool operator==(const Vector4<component_type> &other) const {
+        bool operator==(const vector4<component_type> &other) const {
             return x == other.x && y == other.y && z == other.z && w == other.w;
         }
 
-        bool operator!=(const Vector4<component_type> &other) const {
+        bool operator!=(const vector4<component_type> &other) const {
             return x != other.x || y != other.y || z != other.z || w != other.w;
         } 
 
-        Vector4<component_type> &operator+=(const Vector4<component_type> &other) {
+        vector4<component_type> &operator+=(const vector4<component_type> &other) {
             x += other.x;
             y += other.y;
             z += other.z;
@@ -32,7 +32,7 @@ namespace gdk {
             return *this;
         }
 
-        Vector4<component_type> &operator*=(const float &aScalar) {
+        vector4<component_type> &operator*=(const component_type &aScalar) {
             x *= aScalar;
             y *= aScalar;
             z *= aScalar;
@@ -41,29 +41,29 @@ namespace gdk {
             return *this;
         }
 
-        Vector4<component_type> &operator=(const Vector4<component_type> &) = default;
+        vector4<component_type> &operator=(const vector4<component_type> &) = default;
 
-        Vector4<component_type>(const float &aX, const float &aY, const float &aZ, const float &aW)
+        vector4<component_type>(const component_type &aX, const component_type &aY, const component_type &aZ, const component_type &aW = 1.)
         : x(aX)
         , y(aY)
         , z(aZ)
         , w(aW)
         {}
             
-        Vector4<component_type>(const Vector3<component_type> &aVector3, const float &aW = 1.)
-        : Vector4<component_type>(aVector3.x, aVector3.y, aVector3.z, aW) {}
+        vector4<component_type>(const vector3<component_type> &avector3, const component_type &aW = 1.)
+        : vector4<component_type>(avector3.x, avector3.y, avector3.z, aW) {}
 
-        Vector4<component_type>() 
-        : Vector4<component_type>(0., 0., 0., 1.) {}
+        vector4<component_type>() 
+        : vector4<component_type>(0., 0., 0., 1.) {}
 
-        Vector4<component_type>(const Vector4<component_type> &) = default;
-        Vector4<component_type>(Vector4<component_type> &&) = default;
-        ~Vector4<component_type>() = default;
+        vector4<component_type>(const vector4<component_type> &) = default;
+        vector4<component_type>(vector4<component_type> &&) = default;
+        ~vector4<component_type>() = default;
             
-        static const Vector4<component_type> Zero;
+        static const vector4<component_type> Zero;
     };
 
-    template<typename T> const Vector4<T> Vector4<T>::Zero = {0., 0., 0., 0.};
+    template<typename T> const vector4<T> vector4<T>::Zero = {0., 0., 0., 0.};
 }
 
 #endif
