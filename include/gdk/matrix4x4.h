@@ -18,14 +18,15 @@ namespace gdk {
     /// - the matrix is row-major
     template<typename component_type_param>
     struct matrix4x4 final {
+        static_assert(std::is_floating_point<component_type_param>::value, 
+            "component_type must be a floating point type");
+
         using component_type = component_type_param;
         using order_type = char;
         using quaternion_type = quaternion<component_type_param>;
         using vector2_type = Vector2<component_type_param>;
         using vector3_type = vector3<component_type_param>;
 
-        static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
-        
         static constexpr order_type order{4};
 
         static const matrix4x4<component_type> identity; 
@@ -48,14 +49,14 @@ namespace gdk {
             const component_type aNearClippingPlane, 
             const component_type aFarClippingPlane, 
             const component_type aViewportAspectRatio) {
-            const auto x = aOrthoSize.x * 2 / aViewportAspectRatio;
-            const auto y = aOrthoSize.y * 2;
-            const auto n = -(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
-            const auto f = -2.0f * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
+            const auto x = 2.0f / (aOrthoSize.x * aViewportAspectRatio);
+            const auto y = 2.0f / aOrthoSize.y;
+            const auto n = - (aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
+            const auto f = -2.0f / (aFarClippingPlane - aNearClippingPlane);
 
             m[0][0] = x ; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
             m[0][1] = 0.; m[1][1] = y ; m[2][1] = 0.; m[3][1] = 0.;
-            m[0][2] = 0.; m[1][2] = 0.; m[2][2] = n ; m[3][2] = f ;
+            m[0][2] = 0.; m[1][2] = 0.; m[2][2] = f ; m[3][2] = n ;
             m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;
         }
 
