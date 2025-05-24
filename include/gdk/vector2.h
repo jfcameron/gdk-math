@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iosfwd>
 #include <iostream>
+#include <tuple>
 #include <type_traits>
 
 namespace gdk {

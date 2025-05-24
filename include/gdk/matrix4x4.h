@@ -8,6 +8,7 @@
 #include <gdk/vector3.h>
 #include <gdk/vector4.h>
 
+#include <array>
 #include <cmath>
 #include <iosfwd>
 #include <type_traits>
