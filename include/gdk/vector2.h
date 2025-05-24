@@ -14,7 +14,7 @@ namespace gdk {
     /// useful for storing 2D position, speed, direction, normalized coordinates.
     ///
     template<typename component_type_param = float>
-    struct Vector2 final {
+    struct vector2 final {
         using component_type = component_type_param;
 
         static_assert(std::is_arithmetic<component_type>::value && std::is_signed<component_type>::value, 
@@ -34,7 +34,7 @@ namespace gdk {
 
         //! calculate the distance between this and another vector
         template<class precision_type = component_type>
-        precision_type distance(const Vector2<component_type> &other) const {
+        precision_type distance(const vector2<component_type> &other) const {
             static_assert(std::is_arithmetic<precision_type>::value, "precision_type must be an arithmetic type");
             auto a = std::pow(other.x - x, 2);
             auto b = std::pow(other.y - y, 2);
@@ -51,8 +51,8 @@ namespace gdk {
         }
 
         //! normalize the vector
-        Vector2<component_type> &normalize() {
-            const component_type magnitude = Vector2<component_type>::length();
+        vector2<component_type> &normalize() {
+            const component_type magnitude = vector2<component_type>::length();
             
             if (magnitude != 0) {
                 x /= magnitude;
@@ -63,89 +63,89 @@ namespace gdk {
 
         //! returns a new vector containing the element-wise product of this vector and another
         template<class other_component_type = component_type>
-        Vector2<component_type> elementwise_product(const Vector2<other_component_type> &aOther) const {
+        vector2<component_type> elementwise_product(const vector2<other_component_type> &aOther) const {
             return { x * static_cast<component_type>(aOther.x), y * static_cast<component_type>(aOther.y)};
         }
 
         //! calculate the dot product of this and another vector
         template<class precision_type = component_type>
-        precision_type dot_product(const Vector2<component_type> &other) const {
+        precision_type dot_product(const vector2<component_type> &other) const {
             return { x * other.x + y * other.y };
         }
 
         //! calculate the cross product of this and another vector
         template<class precision_type = component_type>
-        precision_type cross_product(const Vector2<component_type> &other) const {
+        precision_type cross_product(const vector2<component_type> &other) const {
             return { x * other.y - other.x * y };
         }
                 
-        bool operator==(const Vector2<component_type> &other) const { return x == other.x && y == other.y; }
+        bool operator==(const vector2<component_type> &other) const { return x == other.x && y == other.y; }
             
-        bool operator!=(const Vector2<component_type> &other) const { return x != other.x || y != other.y; }
+        bool operator!=(const vector2<component_type> &other) const { return x != other.x || y != other.y; }
             
-        Vector2<component_type> operator+(const Vector2<component_type> &other) const {
+        vector2<component_type> operator+(const vector2<component_type> &other) const {
             return {static_cast<component_type>(x + other.x), static_cast<component_type>(y + other.y)};
         }
         
-        Vector2<component_type> operator-(const Vector2<component_type> &other) const {
+        vector2<component_type> operator-(const vector2<component_type> &other) const {
             return {static_cast<component_type>(x - other.x), static_cast<component_type>(y - other.y)};
         }
 
-        Vector2<component_type> operator*(const component_type aScalar) const {
+        vector2<component_type> operator*(const component_type aScalar) const {
             return {static_cast<component_type>(x * aScalar), static_cast<component_type>(y * aScalar)};
         }
                 
-        Vector2<component_type> &operator+=(const Vector2 &other) {
+        vector2<component_type> &operator+=(const vector2 &other) {
             x += other.x;
             y += other.y;
             return *this;
         }
 
-        Vector2<component_type> &operator-=(const Vector2 &other) {
+        vector2<component_type> &operator-=(const vector2 &other) {
             x -= other.x;
             y -= other.y;
             return *this;
         }
 
-        Vector2<component_type> &operator*=(const component_type aScalar) {
+        vector2<component_type> &operator*=(const component_type aScalar) {
             x *= aScalar;
             y *= aScalar;
             return *this;
         }
 
-        Vector2<component_type> &operator=(const Vector2<component_type> &) = default;
+        vector2<component_type> &operator=(const vector2<component_type> &) = default;
 
-        Vector2<component_type>(const component_type aX, const component_type aY) 	
+        vector2<component_type>(const component_type aX, const component_type aY) 	
         : x(aX)
         , y(aY)
         {}
         
-        Vector2<component_type>(const component_type aScalar)	
-        : Vector2<component_type>(aScalar, aScalar) {}
+        vector2<component_type>(const component_type aScalar)	
+        : vector2<component_type>(aScalar, aScalar) {}
 
         template<class other_component_type = component_type>
-        Vector2<component_type>(const std::pair<other_component_type, other_component_type> aPair)
-        : Vector2<component_type>(static_cast<component_type>(std::get<0>(aPair)), static_cast<component_type>(std::get<1>(aPair))) {}
+        vector2<component_type>(const std::pair<other_component_type, other_component_type> aPair)
+        : vector2<component_type>(static_cast<component_type>(std::get<0>(aPair)), static_cast<component_type>(std::get<1>(aPair))) {}
         
-        Vector2<component_type>() = default;
-        Vector2<component_type>(Vector2<component_type> &&) = default;
-        Vector2<component_type>(const Vector2<component_type> &) = default;
-        ~Vector2<component_type>() = default;
+        vector2<component_type>() = default;
+        vector2<component_type>(vector2<component_type> &&) = default;
+        vector2<component_type>(const vector2<component_type> &) = default;
+        ~vector2<component_type>() = default;
 
-        static const Vector2<component_type> Down;
-        static const Vector2<component_type> Left;
-        static const Vector2<component_type> One;
-        static const Vector2<component_type> Right;
-        static const Vector2<component_type> Up;
-        static const Vector2<component_type> Zero;
+        static const vector2<component_type> Down;
+        static const vector2<component_type> Left;
+        static const vector2<component_type> One;
+        static const vector2<component_type> Right;
+        static const vector2<component_type> Up;
+        static const vector2<component_type> Zero;
     };
 
-    template <typename T> const Vector2<T> Vector2<T>::Down  = { 0,-1};
-    template <typename T> const Vector2<T> Vector2<T>::Left  = {-1, 0};
-    template <typename T> const Vector2<T> Vector2<T>::One   = { 1, 1};
-    template <typename T> const Vector2<T> Vector2<T>::Right = { 1, 0};
-    template <typename T> const Vector2<T> Vector2<T>::Up    = { 0, 1};
-    template <typename T> const Vector2<T> Vector2<T>::Zero  = { 0, 0};
+    template <typename T> const vector2<T> vector2<T>::Down  = { 0,-1};
+    template <typename T> const vector2<T> vector2<T>::Left  = {-1, 0};
+    template <typename T> const vector2<T> vector2<T>::One   = { 1, 1};
+    template <typename T> const vector2<T> vector2<T>::Right = { 1, 0};
+    template <typename T> const vector2<T> vector2<T>::Up    = { 0, 1};
+    template <typename T> const vector2<T> vector2<T>::Zero  = { 0, 0};
 }
 
 #endif

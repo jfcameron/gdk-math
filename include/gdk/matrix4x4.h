@@ -24,7 +24,7 @@ namespace gdk {
         using component_type = component_type_param;
         using order_type = char;
         using quaternion_type = quaternion<component_type_param>;
-        using vector2_type = Vector2<component_type_param>;
+        using vector2_type = vector2<component_type_param>;
         using vector3_type = vector3<component_type_param>;
 
         static constexpr order_type order{4};

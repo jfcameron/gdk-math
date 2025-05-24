@@ -16,7 +16,8 @@ namespace gdk {
     struct vector3 final {
         using component_type = component_type_param;
 
-        static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
+        static_assert(std::is_arithmetic<component_type>::value && std::is_signed<component_type>::value, 
+            "component_type must be a signed arithmetic type");
 
         component_type x = {0}, y = {0}, z = {0};
 
