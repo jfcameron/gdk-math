@@ -29,7 +29,7 @@ namespace gdk {
             return { x * invMagnitude, y * invMagnitude, z * invMagnitude, w * invMagnitude };
         }
             
-        void setFromEuler(const vector3<component_type> &aEulerAngles) {
+        void set_from_euler(const vector3<component_type> &aEulerAngles) {
             static const component_type HALF(0.5);
 
             const auto yaw(aEulerAngles.z);
@@ -51,7 +51,7 @@ namespace gdk {
             z = cr * cp * sy - sr * sp * cy;
         }
 
-        vector3<component_type> toEuler() const {
+        vector3<component_type> to_euler() const {
             using namespace std;
 
             const component_type sinr_cosp = 2 * (w * x + y * z);
@@ -78,14 +78,14 @@ namespace gdk {
             return { -x * invNorm, -y * invNorm, -z * invNorm, w * invNorm };
         }
         // Faster inverse but quanternion must be unit length
-        void inverseUnit() {
+        void inverse_unit() {
             x = -x;
             y = -y;
             z = -z;
             w = w;
         }
         // Faster inverse but quanternion must be unit length
-        quaternion<component_type> inverseUnit() const {
+        quaternion<component_type> inverse_unit() const {
             return { -x, -y, -z, w };
         }
             
@@ -106,7 +106,7 @@ namespace gdk {
         }
             
         quaternion<component_type>(const vector3<component_type> &aEulerAngles) {
-            setFromEuler(aEulerAngles);
+            set_from_euler(aEulerAngles);
         }
 
         quaternion<component_type>(const component_type &aX, const component_type &aY, const component_type &aZ, const component_type &aW)
@@ -123,7 +123,7 @@ namespace gdk {
         
         static const quaternion<component_type> identity;
 
-        static quaternion<component_type> fromEuler(const vector3<component_type> &aVector) {
+        static quaternion<component_type> from_euler(const vector3<component_type> &aVector) {
             return quaternion(aVector);
         }
     };
