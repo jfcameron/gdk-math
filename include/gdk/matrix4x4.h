@@ -18,12 +18,13 @@ namespace gdk {
     /// - the matrix assumes opengl style "right handedness": +X is right, +Y is up, -Z is forward. 
     /// - the matrix is row-major
     template<typename component_type_param>
-    struct matrix4x4 final {
+    class matrix4x4 final {
+    public:
         static_assert(std::is_floating_point<component_type_param>::value, 
             "component_type must be a floating point type");
 
         using component_type = component_type_param;
-        using order_type = char;
+        using order_type = std::size_t;
         using quaternion_type = quaternion<component_type_param>;
         using vector2_type = vector2<component_type_param>;
         using vector3_type = vector3<component_type_param>;
@@ -32,78 +33,51 @@ namespace gdk {
 
         static const matrix4x4<component_type> identity; 
 
-        component_type m[order][order] = {
-            {1.,0.,0.,0.},
-            {0.,1.,0.,0.},
-            {0.,0.,1.,0.},
-            {0.,0.,0.,1.},
+    private: 
+        std::array<component_type, order * order> m = {
+            1.,0.,0.,0.,
+            0.,1.,0.,0.,
+            0.,0.,1.,0.,
+            0.,0.,0.,1.,
         };
+
+        constexpr std::size_t index(order_type aX, order_type aY) const {
+            return aX * order + aY;
+        }
+
+    public:
+        void set(const order_type aX, const order_type aY, const component_type aValue) {
+            m[index(aX, aY)] = aValue;
+        }
+
+        component_type &get(const order_type aX, const order_type aY) {
+            return m[index(aX, aY)];
+        }
+
+        const component_type &get(const order_type aX, const order_type aY) const {
+            return m[index(aX, aY)];
+        }
+
+        inline const component_type &front() const {
+            return m.front();
+        }
 
         //! Sets matrix to an identity matrix
         void set_to_identity() {
             *this = matrix4x4<component_type>::identity;
         }
 
-        //! Sets matrix to an orthographic projection matrix
-        void set_to_orthographic(
-            const vector2_type &aOrthoSize, 
-            const component_type aNearClippingPlane, 
-            const component_type aFarClippingPlane, 
-            const component_type aViewportAspectRatio) {
-            const auto x = 2.0f / (aOrthoSize.x * aViewportAspectRatio);
-            const auto y = 2.0f / aOrthoSize.y;
-            const auto n = - (aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
-            const auto f = -2.0f / (aFarClippingPlane - aNearClippingPlane);
-
-            m[0][0] = x ; m[1][0] = 0.; m[2][0] = 0.; m[3][0] = 0.;
-            m[0][1] = 0.; m[1][1] = y ; m[2][1] = 0.; m[3][1] = 0.;
-            m[0][2] = 0.; m[1][2] = 0.; m[2][2] = f ; m[3][2] = n ;
-            m[0][3] = 0.; m[1][3] = 0.; m[2][3] = 0.; m[3][3] = 1.;
-        }
-
-        //! Sets matrix to a perspective projection matrix
-        void set_to_perspective(
-            const component_type aFieldOfView, 
-            const component_type aNearClippingPlane, 
-            const component_type aFarClippingPlane, 
-            const component_type aViewportAspectRatio) {
-            const auto tanHalfFovy = static_cast<component_type>(tan(aFieldOfView * 0.5));
-
-            m[0][0] = 1.0 / (aViewportAspectRatio * tanHalfFovy);
-            m[0][1] = 0.0;
-            m[0][2] = 0.0;
-            m[0][3] = 0.0;
-
-            m[1][0] = 0.0;
-            m[1][1] = 1.0 / tanHalfFovy;
-            m[1][2] = 0.0;
-            m[1][3] = 0.0;
-
-            m[2][0] = 0.0;
-            m[2][1] = 0.0;
-            m[2][2] =-(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
-            m[2][3] =-1.0;
-
-            m[3][0] = 0.0;
-            m[3][1] = 0.0;
-            m[3][2] =-2.0 * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane);
-            m[3][3] = 0.0;
-        }
-
         //! set the translation components directly
         void set_translation(const vector3_type &aTranslation) {
             // Only modify the translation components in column 3
-            m[3][0] = aTranslation.x;
-            m[3][1] = aTranslation.y;
-            m[3][2] = aTranslation.z;
+            set(3, 0, aTranslation.x);
+            set(3, 1, aTranslation.y);
+            set(3, 2, aTranslation.z);
         }
 
         //! get the translation vector from this matrix
         vector3_type translation() const {
-            return vector3_type(
-                m[3][0], 
-                m[3][1], 
-                m[3][2]);
+            return vector3_type(get(3, 0), get(3, 1), get(3, 2));
         }
 
         //! get the rotation as a quaternion
@@ -114,40 +88,40 @@ namespace gdk {
             matrix4x4<component_type> normalizedMatrix = *this;
             for (order_type i{0}; i < 3; ++i) {
                 for (order_type j{0}; j < 3; ++j) {
-                    normalizedMatrix.m[i][j] /= *scaleAsArray[i];
+                    normalizedMatrix.get(i, j) /= *scaleAsArray[i];
                 }
             }
 
-            component_type trace = normalizedMatrix.m[0][0] + normalizedMatrix.m[1][1] + normalizedMatrix.m[2][2];
+            component_type trace = normalizedMatrix.get(0, 0) + normalizedMatrix.get(1, 1) + normalizedMatrix.get(2, 2);
             quaternion_type q;
 
             if (trace > 0) {
                 component_type s = 0.5 / std::sqrt(trace + 1.0);
                 q.w = 0.25 / s;
-                q.x = (normalizedMatrix.m[2][1] - normalizedMatrix.m[1][2]) * s;
-                q.y = (normalizedMatrix.m[0][2] - normalizedMatrix.m[2][0]) * s;
-                q.z = (normalizedMatrix.m[1][0] - normalizedMatrix.m[0][1]) * s;
+                q.x = (normalizedMatrix.get(2, 1) - normalizedMatrix.get(1, 2)) * s;
+                q.y = (normalizedMatrix.get(0, 2) - normalizedMatrix.get(2, 0)) * s;
+                q.z = (normalizedMatrix.get(1, 0) - normalizedMatrix.get(0, 1)) * s;
             } 
             else {
-                if (normalizedMatrix.m[0][0] > normalizedMatrix.m[1][1] && normalizedMatrix.m[0][0] > normalizedMatrix.m[2][2]) {
-                    component_type s = 2.0 * std::sqrt(1.0 + normalizedMatrix.m[0][0] - normalizedMatrix.m[1][1] - normalizedMatrix.m[2][2]);
-                    q.w = (normalizedMatrix.m[2][1] - normalizedMatrix.m[1][2]) / s;
+                if (normalizedMatrix.get(0, 0) > normalizedMatrix.get(1, 1) && normalizedMatrix.get(0, 0) > normalizedMatrix.get(2, 2)) {
+                    component_type s = 2.0 * std::sqrt(1.0 + normalizedMatrix.get(0, 0) - normalizedMatrix.get(1, 1) - normalizedMatrix.get(2, 2));
+                    q.w = (normalizedMatrix.get(2, 1) - normalizedMatrix.get(1, 2)) / s;
                     q.x = 0.25 * s;
-                    q.y = (normalizedMatrix.m[0][1] + normalizedMatrix.m[1][0]) / s;
-                    q.z = (normalizedMatrix.m[0][2] + normalizedMatrix.m[2][0]) / s;
+                    q.y = (normalizedMatrix.get(0, 1) + normalizedMatrix.get(1, 0)) / s;
+                    q.z = (normalizedMatrix.get(0, 2) + normalizedMatrix.get(2, 0)) / s;
                 } 
-                else if (normalizedMatrix.m[1][1] > normalizedMatrix.m[2][2]) {
-                    component_type s = 2.0 * std::sqrt(1.0 + normalizedMatrix.m[1][1] - normalizedMatrix.m[0][0] - normalizedMatrix.m[2][2]);
-                    q.w = (normalizedMatrix.m[0][2] - normalizedMatrix.m[2][0]) / s;
-                    q.x = (normalizedMatrix.m[0][1] + normalizedMatrix.m[1][0]) / s;
+                else if (normalizedMatrix.get(1, 1) > normalizedMatrix.get(2, 2)) {
+                    component_type s = 2.0 * std::sqrt(1.0 + normalizedMatrix.get(1, 1) - normalizedMatrix.get(0, 0) - normalizedMatrix.get(2, 2));
+                    q.w = (normalizedMatrix.get(0, 2) - normalizedMatrix.get(2, 0)) / s;
+                    q.x = (normalizedMatrix.get(0, 1) + normalizedMatrix.get(1, 0)) / s;
                     q.y = 0.25 * s;
-                    q.z = (normalizedMatrix.m[1][2] + normalizedMatrix.m[2][1]) / s;
+                    q.z = (normalizedMatrix.get(1, 2) + normalizedMatrix.get(2, 1)) / s;
                 } 
                 else {
-                    component_type s = 2.0 * std::sqrt(1.0 + normalizedMatrix.m[2][2] - normalizedMatrix.m[0][0] - normalizedMatrix.m[1][1]);
-                    q.w = (normalizedMatrix.m[1][0] - normalizedMatrix.m[0][1]) / s;
-                    q.x = (normalizedMatrix.m[0][2] + normalizedMatrix.m[2][0]) / s;
-                    q.y = (normalizedMatrix.m[1][2] + normalizedMatrix.m[2][1]) / s;
+                    component_type s = 2.0 * std::sqrt(1.0 + normalizedMatrix.get(2, 2) - normalizedMatrix.get(0, 0) - normalizedMatrix.get(1, 1));
+                    q.w = (normalizedMatrix.get(1, 0) - normalizedMatrix.get(0, 1)) / s;
+                    q.x = (normalizedMatrix.get(0, 2) + normalizedMatrix.get(2, 0)) / s;
+                    q.y = (normalizedMatrix.get(1, 2) + normalizedMatrix.get(2, 1)) / s;
                     q.z = 0.25 * s;
                 }
             }
@@ -170,39 +144,39 @@ namespace gdk {
             
             const auto invs = 1 / (sqx + sqy + sqz + sqw);
             
-            m[0][0] = ( sqx - sqy - sqz + sqw) * invs ; 
-            m[1][1] = (-sqx + sqy - sqz + sqw) * invs ;
-            m[2][2] = (-sqx - sqy + sqz + sqw) * invs ;
+            set(0, 0, ( sqx - sqy - sqz + sqw) * invs); 
+            set(1, 1, (-sqx + sqy - sqz + sqw) * invs);
+            set(2, 2, (-sqx - sqy + sqz + sqw) * invs);
             
             auto tmp1 = q.x * q.y;
             auto tmp2 = q.z * q.w;
             
-            m[1][0] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
-            m[0][1] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
+            set(1, 0, 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs);
+            set(0, 1, 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs);
             
             tmp1 = q.x * q.z;
             tmp2 = q.y * q.w;
             
-            m[2][0] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
-            m[0][2] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
+            set(2, 0, 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs);
+            set(0, 2, 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs);
             
             tmp1 = q.y * q.z;
             tmp2 = q.x * q.w;
             
-            m[2][1] = 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs;
-            m[1][2] = 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs;
+            set(2, 1, 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs);
+            set(1, 2, 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs);
 
-            m[0][0] *= aScale.x;
-            m[0][1] *= aScale.x;
-            m[0][2] *= aScale.x;
+            get(0, 0) *= aScale.x;
+            get(0, 1) *= aScale.x;
+            get(0, 2) *= aScale.x;
 
-            m[1][0] *= aScale.y;
-            m[1][1] *= aScale.y;
-            m[1][2] *= aScale.y;
+            get(1, 0) *= aScale.y;
+            get(1, 1) *= aScale.y;
+            get(1, 2) *= aScale.y;
 
-            m[2][0] *= aScale.z;
-            m[2][1] *= aScale.z;
-            m[2][2] *= aScale.z;
+            get(2, 0) *= aScale.z;
+            get(2, 1) *= aScale.z;
+            get(2, 2) *= aScale.z;
         }
 
         //! transpose the matrix in place
@@ -230,43 +204,43 @@ namespace gdk {
 
         //! convert this matrix to its inverse
         void inverse() {
-            component_type s0 = m[0][0] * m[1][1] - m[1][0] * m[0][1];
-            component_type s1 = m[0][0] * m[1][2] - m[1][0] * m[0][2];
-            component_type s2 = m[0][0] * m[1][3] - m[1][0] * m[0][3];
-            component_type s3 = m[0][1] * m[1][2] - m[1][1] * m[0][2];
-            component_type s4 = m[0][1] * m[1][3] - m[1][1] * m[0][3];
-            component_type s5 = m[0][2] * m[1][3] - m[1][2] * m[0][3];
+            component_type s0 = get(0, 0) * get(1, 1) - get(1, 0) * get(0, 1);
+            component_type s1 = get(0, 0) * get(1, 2) - get(1, 0) * get(0, 2);
+            component_type s2 = get(0, 0) * get(1, 3) - get(1, 0) * get(0, 3);
+            component_type s3 = get(0, 1) * get(1, 2) - get(1, 1) * get(0, 2);
+            component_type s4 = get(0, 1) * get(1, 3) - get(1, 1) * get(0, 3);
+            component_type s5 = get(0, 2) * get(1, 3) - get(1, 2) * get(0, 3);
 
-            component_type c5 = m[2][2] * m[3][3] - m[3][2] * m[2][3];
-            component_type c4 = m[2][1] * m[3][3] - m[3][1] * m[2][3];
-            component_type c3 = m[2][1] * m[3][2] - m[3][1] * m[2][2];
-            component_type c2 = m[2][0] * m[3][3] - m[3][0] * m[2][3];
-            component_type c1 = m[2][0] * m[3][2] - m[3][0] * m[2][2];
-            component_type c0 = m[2][0] * m[3][1] - m[3][0] * m[2][1];
+            component_type c5 = get(2, 2) * get(3, 3) - get(3, 2) * get(2, 3);
+            component_type c4 = get(2, 1) * get(3, 3) - get(3, 1) * get(2, 3);
+            component_type c3 = get(2, 1) * get(3, 2) - get(3, 1) * get(2, 2);
+            component_type c2 = get(2, 0) * get(3, 3) - get(3, 0) * get(2, 3);
+            component_type c1 = get(2, 0) * get(3, 2) - get(3, 0) * get(2, 2);
+            component_type c0 = get(2, 0) * get(3, 1) - get(3, 0) * get(2, 1);
 
             component_type invdet = component_type(1) / (s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0);
 
             component_type b[order][order];
 
-            b[0][0] = ( m[1][1] * c5 - m[1][2] * c4 + m[1][3] * c3) * invdet;
-            b[0][1] = (-m[0][1] * c5 + m[0][2] * c4 - m[0][3] * c3) * invdet;
-            b[0][2] = ( m[3][1] * s5 - m[3][2] * s4 + m[3][3] * s3) * invdet;
-            b[0][3] = (-m[2][1] * s5 + m[2][2] * s4 - m[2][3] * s3) * invdet;
+            b[0][0] = ( get(1, 1) * c5 - get(1, 2) * c4 + get(1, 3) * c3) * invdet;
+            b[0][1] = (-get(0, 1) * c5 + get(0, 2) * c4 - get(0, 3) * c3) * invdet;
+            b[0][2] = ( get(3, 1) * s5 - get(3, 2) * s4 + get(3, 3) * s3) * invdet;
+            b[0][3] = (-get(2, 1) * s5 + get(2, 2) * s4 - get(2, 3) * s3) * invdet;
 
-            b[1][0] = (-m[1][0] * c5 + m[1][2] * c2 - m[1][3] * c1) * invdet;
-            b[1][1] = ( m[0][0] * c5 - m[0][2] * c2 + m[0][3] * c1) * invdet;
-            b[1][2] = (-m[3][0] * s5 + m[3][2] * s2 - m[3][3] * s1) * invdet;
-            b[1][3] = ( m[2][0] * s5 - m[2][2] * s2 + m[2][3] * s1) * invdet;
+            b[1][0] = (-get(1, 0) * c5 + get(1, 2) * c2 - get(1, 3) * c1) * invdet;
+            b[1][1] = ( get(0, 0) * c5 - get(0, 2) * c2 + get(0, 3) * c1) * invdet;
+            b[1][2] = (-get(3, 0) * s5 + get(3, 2) * s2 - get(3, 3) * s1) * invdet;
+            b[1][3] = ( get(2, 0) * s5 - get(2, 2) * s2 + get(2, 3) * s1) * invdet;
 
-            b[2][0] = ( m[1][0] * c4 - m[1][1] * c2 + m[1][3] * c0) * invdet;
-            b[2][1] = (-m[0][0] * c4 + m[0][1] * c2 - m[0][3] * c0) * invdet;
-            b[2][2] = ( m[3][0] * s4 - m[3][1] * s2 + m[3][3] * s0) * invdet;
-            b[2][3] = (-m[2][0] * s4 + m[2][1] * s2 - m[2][3] * s0) * invdet;
+            b[2][0] = ( get(1, 0) * c4 - get(1, 1) * c2 + get(1, 3) * c0) * invdet;
+            b[2][1] = (-get(0, 0) * c4 + get(0, 1) * c2 - get(0, 3) * c0) * invdet;
+            b[2][2] = ( get(3, 0) * s4 - get(3, 1) * s2 + get(3, 3) * s0) * invdet;
+            b[2][3] = (-get(2, 0) * s4 + get(2, 1) * s2 - get(2, 3) * s0) * invdet;
 
-            b[3][0] = (-m[1][0] * c3 + m[1][1] * c1 - m[1][2] * c0) * invdet;
-            b[3][1] = ( m[0][0] * c3 - m[0][1] * c1 + m[0][2] * c0) * invdet;
-            b[3][2] = (-m[3][0] * s3 + m[3][1] * s1 - m[3][2] * s0) * invdet;
-            b[3][3] = ( m[2][0] * s3 - m[2][1] * s1 + m[2][2] * s0) * invdet;
+            b[3][0] = (-get(1, 0) * c3 + get(1, 1) * c1 - get(1, 2) * c0) * invdet;
+            b[3][1] = ( get(0, 0) * c3 - get(0, 1) * c1 + get(0, 2) * c0) * invdet;
+            b[3][2] = (-get(3, 0) * s3 + get(3, 1) * s1 - get(3, 2) * s0) * invdet;
+            b[3][3] = ( get(2, 0) * s3 - get(2, 1) * s1 + get(2, 2) * s0) * invdet;
 
             set(
                 b[0][0], b[0][1], b[0][2], b[0][3],
@@ -280,12 +254,12 @@ namespace gdk {
         /// affine means the matrix must only contain translations, rotations and scales.
         void inverse_affine() { 
             component_type rot[3][3] = {
-                { m[0][0], m[0][1], m[0][2] },
-                { m[1][0], m[1][1], m[1][2] },
-                { m[2][0], m[2][1], m[2][2] }
+                { get(0, 0), get(0, 1), get(0, 2) },
+                { get(1, 0), get(1, 1), get(1, 2) },
+                { get(2, 0), get(2, 1), get(2, 2) }
             };
 
-            component_type trans[3] = { m[3][0], m[3][1], m[3][2] };
+            component_type trans[3] = { get(3, 0), get(3, 1), get(3, 2) };
 
             component_type rotInv[3][3] = {
                 { rot[0][0], rot[1][0], rot[2][0] },
@@ -303,7 +277,7 @@ namespace gdk {
                 rotInv[0][0], rotInv[0][1], rotInv[0][2], 0.0,
                 rotInv[1][0], rotInv[1][1], rotInv[1][2], 0.0,
                 rotInv[2][0], rotInv[2][1], rotInv[2][2], 0.0,
-                transInv[0], transInv[1], transInv[2], 1.0
+                 transInv[0],  transInv[1],  transInv[2], 1.0
             );
         }
 
@@ -313,25 +287,25 @@ namespace gdk {
             const component_type m10, const component_type m11, const component_type m12, const component_type m13,
             const component_type m20, const component_type m21, const component_type m22, const component_type m23, 
             const component_type m30, const component_type m31, const component_type m32, const component_type m33) {
-            m[0][0] = m00; 
-            m[0][1] = m01; 
-            m[0][2] = m02; 
-            m[0][3] = m03;
+            set(0, 0, m00); 
+            set(0, 1, m01); 
+            set(0, 2, m02); 
+            set(0, 3, m03);
 
-            m[1][0] = m10; 
-            m[1][1] = m11; 
-            m[1][2] = m12; 
-            m[1][3] = m13;
+            set(1, 0, m10); 
+            set(1, 1, m11); 
+            set(1, 2, m12); 
+            set(1, 3, m13);
 
-            m[2][0] = m20; 
-            m[2][1] = m21; 
-            m[2][2] = m22; 
-            m[2][3] = m23;
+            set(2, 0, m20); 
+            set(2, 1, m21); 
+            set(2, 2, m22); 
+            set(2, 3, m23);
 
-            m[3][0] = m30; 
-            m[3][1] = m31; 
-            m[3][2] = m32;
-            m[3][3] = m33;
+            set(3, 0, m30); 
+            set(3, 1, m31); 
+            set(3, 2, m32);
+            set(3, 3, m33);
             
             return *this;
         }
@@ -339,22 +313,22 @@ namespace gdk {
         //! multiply the matrix against another
         matrix4x4<component_type> &multiply(const matrix4x4 &right) {
             set(
-                m[0][0] * right.m[0][0] + m[1][0] * right.m[0][1] + m[2][0] * right.m[0][2] + m[3][0] * right.m[0][3],
-                m[0][1] * right.m[0][0] + m[1][1] * right.m[0][1] + m[2][1] * right.m[0][2] + m[3][1] * right.m[0][3],
-                m[0][2] * right.m[0][0] + m[1][2] * right.m[0][1] + m[2][2] * right.m[0][2] + m[3][2] * right.m[0][3],
-                m[0][3] * right.m[0][0] + m[1][3] * right.m[0][1] + m[2][3] * right.m[0][2] + m[3][3] * right.m[0][3],
-                m[0][0] * right.m[1][0] + m[1][0] * right.m[1][1] + m[2][0] * right.m[1][2] + m[3][0] * right.m[1][3],
-                m[0][1] * right.m[1][0] + m[1][1] * right.m[1][1] + m[2][1] * right.m[1][2] + m[3][1] * right.m[1][3],
-                m[0][2] * right.m[1][0] + m[1][2] * right.m[1][1] + m[2][2] * right.m[1][2] + m[3][2] * right.m[1][3],
-                m[0][3] * right.m[1][0] + m[1][3] * right.m[1][1] + m[2][3] * right.m[1][2] + m[3][3] * right.m[1][3],
-                m[0][0] * right.m[2][0] + m[1][0] * right.m[2][1] + m[2][0] * right.m[2][2] + m[3][0] * right.m[2][3],
-                m[0][1] * right.m[2][0] + m[1][1] * right.m[2][1] + m[2][1] * right.m[2][2] + m[3][1] * right.m[2][3],
-                m[0][2] * right.m[2][0] + m[1][2] * right.m[2][1] + m[2][2] * right.m[2][2] + m[3][2] * right.m[2][3],
-                m[0][3] * right.m[2][0] + m[1][3] * right.m[2][1] + m[2][3] * right.m[2][2] + m[3][3] * right.m[2][3],
-                m[0][0] * right.m[3][0] + m[1][0] * right.m[3][1] + m[2][0] * right.m[3][2] + m[3][0] * right.m[3][3],
-                m[0][1] * right.m[3][0] + m[1][1] * right.m[3][1] + m[2][1] * right.m[3][2] + m[3][1] * right.m[3][3],
-                m[0][2] * right.m[3][0] + m[1][2] * right.m[3][1] + m[2][2] * right.m[3][2] + m[3][2] * right.m[3][3],
-                m[0][3] * right.m[3][0] + m[1][3] * right.m[3][1] + m[2][3] * right.m[3][2] + m[3][3] * right.m[3][3]);
+                get(0, 0) * right.get(0, 0) + get(1, 0) * right.get(0, 1) + get(2, 0) * right.get(0, 2) + get(3, 0) * right.get(0, 3),
+                get(0, 1) * right.get(0, 0) + get(1, 1) * right.get(0, 1) + get(2, 1) * right.get(0, 2) + get(3, 1) * right.get(0, 3),
+                get(0, 2) * right.get(0, 0) + get(1, 2) * right.get(0, 1) + get(2, 2) * right.get(0, 2) + get(3, 2) * right.get(0, 3),
+                get(0, 3) * right.get(0, 0) + get(1, 3) * right.get(0, 1) + get(2, 3) * right.get(0, 2) + get(3, 3) * right.get(0, 3),
+                get(0, 0) * right.get(1, 0) + get(1, 0) * right.get(1, 1) + get(2, 0) * right.get(1, 2) + get(3, 0) * right.get(1, 3),
+                get(0, 1) * right.get(1, 0) + get(1, 1) * right.get(1, 1) + get(2, 1) * right.get(1, 2) + get(3, 1) * right.get(1, 3),
+                get(0, 2) * right.get(1, 0) + get(1, 2) * right.get(1, 1) + get(2, 2) * right.get(1, 2) + get(3, 2) * right.get(1, 3),
+                get(0, 3) * right.get(1, 0) + get(1, 3) * right.get(1, 1) + get(2, 3) * right.get(1, 2) + get(3, 3) * right.get(1, 3),
+                get(0, 0) * right.get(2, 0) + get(1, 0) * right.get(2, 1) + get(2, 0) * right.get(2, 2) + get(3, 0) * right.get(2, 3),
+                get(0, 1) * right.get(2, 0) + get(1, 1) * right.get(2, 1) + get(2, 1) * right.get(2, 2) + get(3, 1) * right.get(2, 3),
+                get(0, 2) * right.get(2, 0) + get(1, 2) * right.get(2, 1) + get(2, 2) * right.get(2, 2) + get(3, 2) * right.get(2, 3),
+                get(0, 3) * right.get(2, 0) + get(1, 3) * right.get(2, 1) + get(2, 3) * right.get(2, 2) + get(3, 3) * right.get(2, 3),
+                get(0, 0) * right.get(3, 0) + get(1, 0) * right.get(3, 1) + get(2, 0) * right.get(3, 2) + get(3, 0) * right.get(3, 3),
+                get(0, 1) * right.get(3, 0) + get(1, 1) * right.get(3, 1) + get(2, 1) * right.get(3, 2) + get(3, 1) * right.get(3, 3),
+                get(0, 2) * right.get(3, 0) + get(1, 2) * right.get(3, 1) + get(2, 2) * right.get(3, 2) + get(3, 2) * right.get(3, 3),
+                get(0, 3) * right.get(3, 0) + get(1, 3) * right.get(3, 1) + get(2, 3) * right.get(3, 2) + get(3, 3) * right.get(3, 3));
             
             return *this;
         }
@@ -362,9 +336,9 @@ namespace gdk {
         //! gets the scaling factor from the internal rotation matrix
         vector3_type scale() const {
             return {
-                std::sqrt(m[0][0] * m[0][0] + m[0][1] * m[0][1] + m[0][2] * m[0][2]),
-                std::sqrt(m[1][0] * m[1][0] + m[1][1] * m[1][1] + m[1][2] * m[1][2]),
-                std::sqrt(m[2][0] * m[2][0] + m[2][1] * m[2][1] + m[2][2] * m[2][2])
+                std::sqrt(get(0, 0) * get(0, 0) + get(0, 1) * get(0, 1) + get(0, 2) * get(0, 2)),
+                std::sqrt(get(1, 0) * get(1, 0) + get(1, 1) * get(1, 1) + get(1, 2) * get(1, 2)),
+                std::sqrt(get(2, 0) * get(2, 0) + get(2, 1) * get(2, 1) + get(2, 2) * get(2, 2))
             };
         }
 
@@ -385,7 +359,7 @@ namespace gdk {
 
         bool operator==(const matrix4x4<component_type> &other) const {
             for(order_type i = 0; i < order; ++i) for (order_type j{0}; j < order; ++j)
-                if (m[i][j] != other.m[i][j])
+                if (get(i, j) != other.get(i, j))
                     return false;
 
             return true;
@@ -418,6 +392,57 @@ namespace gdk {
         matrix4x4<component_type>(matrix4x4<component_type>&&) = default;
         ~matrix4x4<component_type>() = default;
 
+        //! makes an orthographic projection matrix
+        static matrix4x4<component_type> make_orthographic_projection_matrix(
+            const vector2<component_type> &aOrthoSize, 
+            const component_type aNearClippingPlane, 
+            const component_type aFarClippingPlane, 
+            const component_type aViewportAspectRatio) {
+            const auto x = 2.0f / (aOrthoSize.x * aViewportAspectRatio);
+            const auto y = 2.0f / aOrthoSize.y;
+            const auto n = - (aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane);
+            const auto f = -2.0f / (aFarClippingPlane - aNearClippingPlane);
+
+            matrix4x4<component_type> matrix;
+            matrix.set(0, 0, x ); matrix.set(1, 0, 0.); matrix.set(2, 0, 0.); matrix.set(3, 0, 0.);
+            matrix.set(0, 1, 0.); matrix.set(1, 1, y ); matrix.set(2, 1, 0.); matrix.set(3, 1, 0.);
+            matrix.set(0, 2, 0.); matrix.set(1, 2, 0.); matrix.set(2, 2, f ); matrix.set(3, 2, n );
+            matrix.set(0, 3, 0.); matrix.set(1, 3, 0.); matrix.set(2, 3, 0.); matrix.set(3, 3, 1.);
+            return matrix;
+        }
+
+        //! makes a perspective projection matrix
+        static matrix4x4<component_type> make_perspective_projection_matrix(
+            const component_type aFieldOfView, 
+            const component_type aNearClippingPlane, 
+            const component_type aFarClippingPlane, 
+            const component_type aViewportAspectRatio) {
+            const auto tanHalfFovy = static_cast<component_type>(tan(aFieldOfView * 0.5));
+
+            matrix4x4<component_type> matrix;
+
+            matrix.set(0, 0, 1.0 / (aViewportAspectRatio * tanHalfFovy));
+            matrix.set(0, 1, 0.0);
+            matrix.set(0, 2, 0.0);
+            matrix.set(0, 3, 0.0);
+
+            matrix.set(1, 0, 0.0);
+            matrix.set(1, 1, 1.0 / tanHalfFovy);
+            matrix.set(1, 2, 0.0);
+            matrix.set(1, 3, 0.0);
+
+            matrix.set(2, 0, 0.0);
+            matrix.set(2, 1, 0.0);
+            matrix.set(2, 2,-(aFarClippingPlane + aNearClippingPlane) / (aFarClippingPlane - aNearClippingPlane));
+            matrix.set(2, 3,-1.0);
+
+            matrix.set(3, 0, 0.0);
+            matrix.set(3, 1, 0.0);
+            matrix.set(3, 2,-2.0 * aFarClippingPlane * aNearClippingPlane / (aFarClippingPlane - aNearClippingPlane));
+            matrix.set(3, 3, 0.0);
+
+            return matrix;
+        }
     };
 
     template<typename component_type> 
@@ -428,17 +453,17 @@ namespace gdk {
     vector3<component_type> &operator*=(vector3<component_type> &aVector, matrix4x4<component_type> aMatrix) {
         vector4<component_type> vec(aVector.x, aVector.y, aVector.z, 1.0);
 
-        aMatrix.m[0][1] = -aMatrix.m[0][1];
-        aMatrix.m[0][2] = -aMatrix.m[0][2];
-        aMatrix.m[1][0] = -aMatrix.m[1][0];
-        aMatrix.m[1][2] = -aMatrix.m[1][2];
-        aMatrix.m[2][0] = -aMatrix.m[2][0];
-        aMatrix.m[2][1] = -aMatrix.m[2][1];
+        aMatrix.set(0, 1, -aMatrix.get(0, 1));
+        aMatrix.set(0, 2, -aMatrix.get(0, 2));
+        aMatrix.set(1, 0, -aMatrix.get(1, 0));
+        aMatrix.set(1, 2, -aMatrix.get(1, 2));
+        aMatrix.set(2, 0, -aMatrix.get(2, 0));
+        aMatrix.set(2, 1, -aMatrix.get(2, 1));
 
-        const auto newX = aMatrix.m[0][0] * vec.x + aMatrix.m[1][0] * vec.y + aMatrix.m[2][0] * vec.z + aMatrix.m[3][0]; 
-        const auto newY = aMatrix.m[0][1] * vec.x + aMatrix.m[1][1] * vec.y + aMatrix.m[2][1] * vec.z + aMatrix.m[3][1];
-        const auto newZ = aMatrix.m[0][2] * vec.x + aMatrix.m[1][2] * vec.y + aMatrix.m[2][2] * vec.z + aMatrix.m[3][2];
-        const auto newW = aMatrix.m[0][3] * vec.x + aMatrix.m[1][3] * vec.y + aMatrix.m[2][3] * vec.z + aMatrix.m[3][3];
+        const auto newX = aMatrix.get(0, 0) * vec.x + aMatrix.get(1, 0) * vec.y + aMatrix.get(2, 0) * vec.z + aMatrix.get(3, 0); 
+        const auto newY = aMatrix.get(0, 1) * vec.x + aMatrix.get(1, 1) * vec.y + aMatrix.get(2, 1) * vec.z + aMatrix.get(3, 1);
+        const auto newZ = aMatrix.get(0, 2) * vec.x + aMatrix.get(1, 2) * vec.y + aMatrix.get(2, 2) * vec.z + aMatrix.get(3, 2);
+        const auto newW = aMatrix.get(0, 3) * vec.x + aMatrix.get(1, 3) * vec.y + aMatrix.get(2, 3) * vec.z + aMatrix.get(3, 3);
 
         if (std::abs(newW - 1.0) > 1e-6) {
             aVector.x = newX / newW;
