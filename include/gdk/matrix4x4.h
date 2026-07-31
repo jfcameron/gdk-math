@@ -131,8 +131,8 @@ namespace gdk {
             return q;
         }
 
-        //! set the rotation component directly
-        void set_rotation(const quaternion_type &aRotation, const vector3_type &aScale = {1}) {
+        //! set the rotation component directly (rotation and scale use the same components of a 4x4 matrix)
+        void set_rotation_and_scale(const quaternion_type &aRotation, const vector3_type &aScale) {
             using namespace std;
 
             const quaternion_type &q = aRotation;
@@ -177,6 +177,16 @@ namespace gdk {
             get(2, 0) *= aScale.z;
             get(2, 1) *= aScale.z;
             get(2, 2) *= aScale.z;
+        }
+
+        //! sets the rotation while preserving scaling
+        void set_rotation(const quaternion_type &aRotation) {
+            return set_rotation_and_scale(aRotation, scale());
+        }
+
+        //! sets thes scale while preserving rotation
+        void set_scale(const vector3_type &aScale) {
+            return set_rotation_and_scale(rotation(), aScale);
         }
 
         //! transpose the matrix in place
@@ -383,7 +393,7 @@ namespace gdk {
             const quaternion_type &aRotationComponent,
             const vector3_type &aScale = {1}) {
             set_to_identity();
-            set_rotation(aRotationComponent, aScale);
+            set_rotation_and_scale(aRotationComponent, aScale);
             set_translation(aTranslationComponent);
         }
 
@@ -447,6 +457,17 @@ namespace gdk {
 
     template<typename component_type> 
     const matrix4x4<component_type> matrix4x4<component_type>::identity = matrix4x4<component_type>();
+
+    template<typename component_type> 
+    vector4<component_type> operator*(const matrix4x4<component_type> &aMatrix, const vector4<component_type> &v) {
+         return {
+            aMatrix.get(0, 0) * v.x + aMatrix.get(0, 1) * v.y + aMatrix.get(0, 2) * v.z + aMatrix.get(0, 3) * v.w,
+            aMatrix.get(1, 0) * v.x + aMatrix.get(1, 1) * v.y + aMatrix.get(1, 2) * v.z + aMatrix.get(1, 3) * v.w,
+            aMatrix.get(2, 0) * v.x + aMatrix.get(2, 1) * v.y + aMatrix.get(2, 2) * v.z + aMatrix.get(2, 3) * v.w,
+            aMatrix.get(3, 0) * v.x + aMatrix.get(3, 1) * v.y + aMatrix.get(3, 2) * v.z + aMatrix.get(3, 3) * v.w
+        };
+    }
+    
 
     //! multiply a 3d vector by a matrix
     template<typename component_type> 
