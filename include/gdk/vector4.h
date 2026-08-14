@@ -3,68 +3,57 @@
 #ifndef GDK_MATH_VECTOR4_H
 #define GDK_MATH_VECTOR4_H
 
+#include <gdk/storage.inl> // varies by implementation
+
 #include <gdk/vector3.h>
 
 #include <iosfwd>
 
 namespace gdk {
-    /// \brief Like vector3<component_type> but allows w to != 1. Used in Vector vs matrix4x4 operations
+    /// \brief a homogeneous coordinate: a 3d position or direction plus w
+    /// - w = 1 marks a position, so a transform's translation applies to it
+    /// - w = 0 marks a direction, so it does not
     template<typename component_type_param = float>
-    struct vector4 final {
+    class vector4 final : public vector4_storage<component_type_param> {
+    public:
         using component_type = component_type_param;
 
-        component_type x = {0.}, y = {0.}, z = {0.}, w = {1.};
-            
-        bool operator==(const vector4<component_type> &other) const {
-            return x == other.x && y == other.y && z == other.z && w == other.w;
-        }
+        using vector4_storage<component_type_param>::x;
+        using vector4_storage<component_type_param>::y;
+        using vector4_storage<component_type_param>::z;
+        using vector4_storage<component_type_param>::w;
 
-        bool operator!=(const vector4<component_type> &other) const {
-            return x != other.x || y != other.y || z != other.z || w != other.w;
-        } 
+        //! the three components as they stand, with no divide. Correct for a direction.
+        [[nodiscard]] constexpr vector3<component_type> xyz() const;
 
-        vector4<component_type> &operator+=(const vector4<component_type> &other) {
-            x += other.x;
-            y += other.y;
-            z += other.z;
-            w += other.w;
+        //! the euclidean point this represents: xyz divided through by w. A w of 0 divides by nothing.
+        [[nodiscard]] constexpr vector3<component_type> to_point() const;
 
-            return *this;
-        }
-
-        vector4<component_type> &operator*=(const component_type &aScalar) {
-            x *= aScalar;
-            y *= aScalar;
-            z *= aScalar;
-            w *= aScalar;
-
-            return *this;
-        }
+        [[nodiscard]] constexpr bool operator==(const vector4<component_type> &other) const;
+        [[nodiscard]] constexpr bool operator!=(const vector4<component_type> &other) const;
 
         vector4<component_type> &operator=(const vector4<component_type> &) = default;
 
-        vector4<component_type>(const component_type &aX, const component_type &aY, const component_type &aZ, const component_type &aW = 1.)
-        : x(aX)
-        , y(aY)
-        , z(aZ)
-        , w(aW)
-        {}
-            
-        vector4<component_type>(const vector3<component_type> &avector3, const component_type &aW = 1.)
-        : vector4<component_type>(avector3.x, avector3.y, avector3.z, aW) {}
+        constexpr vector4(const component_type &aX, const component_type &aY,
+            const component_type &aZ, const component_type &aW = 1.);
 
-        vector4<component_type>() 
-        : vector4<component_type>(0., 0., 0., 1.) {}
+        //! extend a vector3, defaulting w to 1
+        constexpr vector4(const vector3<component_type> &avector3,
+            const component_type &aW = 1.);
 
-        vector4<component_type>(const vector4<component_type> &) = default;
-        vector4<component_type>(vector4<component_type> &&) = default;
-        ~vector4<component_type>() = default;
-            
-        static const vector4<component_type> Zero;
+        //! make a direction from a vector3 
+        [[nodiscard]] static constexpr vector4<component_type> direction(const vector3<component_type> &aVector);
+
+        constexpr vector4();
+        vector4(const vector4<component_type> &) = default;
+        vector4(vector4<component_type> &&) = default;
+        ~vector4() = default;
+
+        //! the origin as a point: {0, 0, 0, 1}. 
+        static const vector4<component_type> origin;
     };
-
-    template<typename T> const vector4<T> vector4<T>::Zero = {0., 0., 0., 0.};
 }
 
-#endif
+#include <gdk/vector4.inl> // varies by implementation
 
+#endif

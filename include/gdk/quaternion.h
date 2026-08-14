@@ -3,144 +3,113 @@
 #ifndef GDK_MATH_QUATERNION_H
 #define GDK_MATH_QUATERNION_H
 
+#include <gdk/storage.inl> // varies by implementation
+
+#include <gdk/math_constants.h>
 #include <gdk/vector3.h>
 
+#include <algorithm>
+#include <cmath>
 #include <iosfwd>
-#include <iostream>
+#include <stdexcept>
 #include <type_traits>
 
 namespace gdk {
     /// \brief Used to represent 3d rotations 
     template<typename component_type_param = float>
-    struct quaternion final {
+    class quaternion final : public quaternion_storage<component_type_param> {
+    public:
         using component_type = component_type_param;
 
-        static_assert(std::is_floating_point<component_type>::value, "component_type must be a floating point type");
+        using quaternion_storage<component_type_param>::x;
+        using quaternion_storage<component_type_param>::y;
+        using quaternion_storage<component_type_param>::z;
+        using quaternion_storage<component_type_param>::w;
 
-        component_type x = {0.}, y = {0.}, z = {0.}, w = {1.};
+        static_assert(std::is_floating_point<component_type>::value, 
+            "component_type must be a floating point type");
 
-        quaternion<component_type> normalized() const {
-            component_type magnitude = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2) + pow(w, 2));
-            if (magnitude == 0.0) {
-                //throw std::runtime_error("Cannot normalize a zero-length quaternion.");
-                return {};
-            }
-            float invMagnitude = 1.0f / magnitude;
-            return { x * invMagnitude, y * invMagnitude, z * invMagnitude, w * invMagnitude };
-        }
-            
-        void set_from_euler(const vector3<component_type> &aEulerAngles) {
-            static const component_type HALF(0.5);
+        //! unit length copy. 
+        [[nodiscard]] quaternion<component_type> normalized() const;
 
-            const auto yaw(aEulerAngles.z);
-            const auto pitch(aEulerAngles.y);
-            const auto roll(aEulerAngles.x);
+        //! assign from euler angles in radians. **YXZ**
+        void set_from_euler(const vector3<component_type> &aEulerAngles);
 
-            using namespace std;
+        //! read back as euler angles, in radians. The inverse of set_from_euler, YXZ as above.
+        [[nodiscard]] vector3<component_type> to_euler() const;
 
-            const auto cy = cos(yaw * HALF);
-            const auto sy = sin(yaw * HALF);
-            const auto cp = cos(pitch * HALF);
-            const auto sp = sin(pitch * HALF);
-            const auto cr = cos(roll * HALF);
-            const auto sr = sin(roll * HALF);
+        //! calculate the dot product
+        [[nodiscard]] constexpr component_type dot_product(const quaternion<component_type> &other) const;
 
-            w = cr * cp * cy + sr * sp * sy;
-            x = sr * cp * cy - cr * sp * sy;
-            y = cr * sp * cy + sr * cp * sy;
-            z = cr * cp * sy - sr * sp * cy;
-        }
+        //! the angle of this rotation, in radians, on [0, 2pi]
+        [[nodiscard]] component_type angle() const;
 
-        vector3<component_type> to_euler() const {
-            using namespace std;
+        //! the unit axis this rotation turns about
+        [[nodiscard]] vector3<component_type> axis() const;
 
-            const component_type sinr_cosp = 2 * (w * x + y * z);
-            const component_type cosr_cosp = 1 - 2 * (x * x + y * y);
-            const component_type roll = atan2(sinr_cosp, cosr_cosp);
+        //! full inverse; use for non-unit quaternions
+        [[nodiscard]] constexpr quaternion<component_type> inverse() const;
 
-            const component_type sinp = 2 * (w * y - z * x);
-            const component_type pitch = asin(sinp);
+        //! faster inverse, but the quaternion must be unit length
+        [[nodiscard]] constexpr quaternion<component_type> inverse_unit() const;
 
-            const component_type siny_cosp = 2 * (w * z + x * y);
-            const component_type cosy_cosp = 1 - 2 * (y * y + z * z);
-            const component_type yaw = atan2(siny_cosp, cosy_cosp);
-
-            return {roll, pitch, yaw};
-        }
-
-        // Full inverse (use for non-unit quaternions)
-        quaternion<component_type> inverse() const {
-            component_type normSquared = x*x + y*y + z*z + w*w;
-            if (normSquared == 0.0f) {
-                throw std::runtime_error("Cannot invert a zero quaternion.");
-            }
-            component_type invNorm = 1.0f / normSquared;
-            return { -x * invNorm, -y * invNorm, -z * invNorm, w * invNorm };
-        }
-        // Faster inverse but quanternion must be unit length
-        void inverse_unit() {
-            x = -x;
-            y = -y;
-            z = -z;
-            w = w;
-        }
-        // Faster inverse but quanternion must be unit length
-        quaternion<component_type> inverse_unit() const {
-            return { -x, -y, -z, w };
-        }
-            
         quaternion<component_type> &operator=(const quaternion<component_type> &) = default;
         quaternion<component_type> &operator=(quaternion<component_type> &&) = default;
-        
-        bool operator==(const quaternion<component_type> &other) const {
-            return x == other.x && y == other.y && z == other.z && w == other.w;
-        }
 
-        quaternion<component_type> &operator*=(const component_type aScalar) {
-            x *= aScalar;
-            y *= aScalar;
-            z *= aScalar;
-            w *= aScalar;
+        [[nodiscard]] constexpr bool operator==(const quaternion<component_type> &other) const;
 
-            return *this;
-        }
-            
-        quaternion<component_type>(const vector3<component_type> &aEulerAngles) {
-            set_from_euler(aEulerAngles);
-        }
+        constexpr quaternion<component_type> &operator*=(const component_type aScalar);
 
-        quaternion<component_type>(const component_type &aX, const component_type &aY, const component_type &aZ, const component_type &aW)
-        : x(aX)
-        , y(aY)
-        , z(aZ)
-        , w(aW)
-        {}
+        //! scale all four components
+        [[nodiscard]] constexpr quaternion<component_type> operator*(const component_type aScalar) const;
 
-        quaternion<component_type>() = default;
-        quaternion<component_type>(const quaternion<component_type> &) = default;
-        quaternion<component_type>(quaternion<component_type> &&) = default;
-        ~quaternion<component_type>() = default;
-        
+        //! component-wise sum
+        [[nodiscard]] constexpr quaternion<component_type> operator+(const quaternion<component_type> &other) const;
+
+        //! negation of all four components
+        [[nodiscard]] constexpr quaternion<component_type> operator-() const;
+
+        //! the negation of operator==
+        [[nodiscard]] constexpr bool operator!=(const quaternion<component_type> &other) const;
+
+        //! construct from euler angles, in radians. YXZ 
+        constexpr explicit quaternion(const vector3<component_type> &aEulerAngles);
+
+        constexpr quaternion(const component_type &aX, const component_type &aY,
+            const component_type &aZ, const component_type &aW);
+
+        quaternion() = default;
+        quaternion(const quaternion<component_type> &) = default;
+        quaternion(quaternion<component_type> &&) = default;
+        ~quaternion() = default;
+
         static const quaternion<component_type> identity;
 
-        static quaternion<component_type> from_euler(const vector3<component_type> &aVector) {
-            return quaternion(aVector);
-        }
+        //! alias for the from-euler-angles constructor
+        [[nodiscard]] static quaternion<component_type> from_euler(
+            const vector3<component_type> &aVector);
+
+        //! build a rotation of aAngle radians about aAxis, right-handed
+        [[nodiscard]] static quaternion<component_type> from_angle_axis(const component_type aAngle,
+            const vector3<component_type> &aAxis);
     };
 
-    //! quaternion multiplication
+    //! spherical linear interpolation: constant angular velocity along the shorter arc
     template <typename component_type>
-    quaternion<component_type> operator*(const quaternion<component_type> a, const quaternion<component_type> b) {
-        return {
-            a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,  
-            a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x, 
-            a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w, 
-            a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z 
-        };
-    }
-        
-    template <typename component_type> const quaternion<component_type> quaternion<component_type>::identity = quaternion();
+    [[nodiscard]] quaternion<component_type> slerp(const quaternion<component_type> &a,
+        const quaternion<component_type> &b, const component_type t);
+
+    //! normalized linear interpolation: cheaper than slerp, and not constant velocity
+    template <typename component_type>
+    [[nodiscard]] quaternion<component_type> nlerp(const quaternion<component_type> &a,
+        const quaternion<component_type> &b, const component_type t);
+
+    //! quaternion multiplication: compose two rotations, rightmost applied first
+    template <typename component_type>
+    [[nodiscard]] constexpr quaternion<component_type> operator*(const quaternion<component_type> &a,
+        const quaternion<component_type> &b);
 }
 
-#endif
+#include <gdk/quaternion.inl> // varies by implementation
 
+#endif

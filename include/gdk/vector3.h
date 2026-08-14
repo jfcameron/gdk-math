@@ -3,37 +3,48 @@
 #ifndef GDK_MATH_VECTOR3_H
 #define GDK_MATH_VECTOR3_H
 
+#include <gdk/storage.inl> // varies by implementation
+
+#include <gdk/math_constants.h>
+
+#include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <iosfwd>
 #include <stdexcept>
 #include <type_traits>
 
 namespace gdk {
-    /// \brief 3d vector class used to represent position, scale, velocity, heading, euler angles, etc.
-    ///
-    /// \tparam component_type_param numeric type used by the vector's components
-    ///
+    /// \brief 3d vector used to represent position, scale, velocity, heading, euler angles, etc.
+    /// - **right-handed**: +X right, +Y up, +Z back
     template<typename component_type_param = float>
-    struct vector3 final {
+    class vector3 final : public vector3_storage<component_type_param> {
+    public:
         using component_type = component_type_param;
+
+        using vector3_storage<component_type_param>::x;
+        using vector3_storage<component_type_param>::y;
+        using vector3_storage<component_type_param>::z;
 
         static_assert(
             std::is_arithmetic<component_type>::value && 
             std::is_signed<component_type>::value, 
             "vector3::component_type must be a signed arithmetic type");
 
-		vector3(const component_type& a);
+        //! set a single scalar value to all three components. 
+        constexpr explicit vector3(const component_type &aBroadcast);
         vector3 &operator=(const vector3 &) = default;
         vector3() = default;
-        vector3(const component_type &aX, const component_type &aY, const component_type &aZ);
+        constexpr vector3(const component_type &aX, const component_type &aY, const component_type &aZ);
         vector3(const vector3 &that) = default;
         vector3(vector3 &&) = default;
         ~vector3() = default;
 
-        /// \brief creates a new vector made of the largest components of two vectors
-        static vector3 max(const vector3 &a, const vector3 &b);
-        /// \brief creates a new vector made of the smallest components of two vectors
-        static vector3 min(const vector3 &a, const vector3 &b);
+        //! a new vector made of the largest components of two vectors
+        static constexpr vector3 max(const vector3 &a, const vector3 &b);
+
+        //! a new vector made of the smallest components of two vectors
+        static constexpr vector3 min(const vector3 &a, const vector3 &b);
 
         static const vector3 backward;
         static const vector3 down;
@@ -44,249 +55,52 @@ namespace gdk {
         static const vector3 up;
         static const vector3 zero;
 
-        //! faster than a component-wise check but not approprate if each component must be precisely zero
-        [[nodiscard]] bool is_effectively_zero() const;
+        //! faster than a component-wise check, but not appropriate if each component must be exactly zero
+        [[nodiscard]] constexpr bool is_effectively_zero() const;
         [[nodiscard]] component_type distance_from(const vector3 &that) const;
-        [[nodiscard]] component_type dot_product(const vector3 &that) const;
+        [[nodiscard]] constexpr component_type dot_product(const vector3 &that) const;
         [[nodiscard]] component_type length() const;
         //! get the squared length of the vector (faster than length, appropriate for certain use cases)
-        [[nodiscard]] component_type length_squared() const;
-        [[nodiscard]] vector3 cross_product(const vector3 &that) const;
-        [[nodiscard]] vector3 element_wise_product(const vector3 &aOther) const;
+        [[nodiscard]] constexpr component_type length_squared() const;
+        [[nodiscard]] constexpr vector3 cross_product(const vector3 &that) const;
+        [[nodiscard]] constexpr vector3 element_wise_product(const vector3 &aOther) const;
         [[nodiscard]] vector3 normal() const;
 
         vector3 &normalize();
 
-        bool operator!=(const vector3 &that) const;
-        bool operator==(const vector3 &that) const;
+        //! the angle between two directions, in radians, on [0, pi]. Zero for a zero-length operand.
+        [[nodiscard]] component_type angle_between(const vector3 &that) const;
 
-        component_type &operator[](const size_t aComponentIndex);
-        component_type operator[](const size_t aComponentIndex) const;
+        //! mirror this vector about a surface with the given normal. aNormal is assumed unit length.
+        [[nodiscard]] constexpr vector3 reflect(const vector3 &aNormal) const;
+
+        [[nodiscard]] constexpr bool operator!=(const vector3 &that) const;
+        [[nodiscard]] constexpr bool operator==(const vector3 &that) const;
+
+        constexpr component_type &operator[](const std::size_t aComponentIndex);
+        [[nodiscard]] constexpr component_type operator[](const std::size_t aComponentIndex) const;
  
-        [[nodiscard]] vector3 operator*(const component_type aScalar) const;
-        [[nodiscard]] vector3 operator+(const vector3 &that) const;
-        [[nodiscard]] vector3 operator-() const;
-        [[nodiscard]] vector3 operator-(const vector3 &that) const;
-        [[nodiscard]] vector3 operator/(const vector3 &that) const;
+        [[nodiscard]] constexpr vector3 operator*(const component_type aScalar) const;
+        [[nodiscard]] constexpr vector3 operator/(const component_type aScalar) const;
+        [[nodiscard]] constexpr vector3 operator+(const vector3 &that) const;
+        [[nodiscard]] constexpr vector3 operator-() const;
+        [[nodiscard]] constexpr vector3 operator-(const vector3 &that) const;
+        [[nodiscard]] constexpr vector3 operator/(const vector3 &that) const;
 
-        vector3 &operator*=(const component_type &aScalar);
-        vector3 &operator+=(const vector3 &that);
-        vector3 &operator-=(const vector3 &that);
-        vector3 &operator/=(const vector3 &that);
+        constexpr vector3 &operator*=(const component_type &aScalar);
+        constexpr vector3 &operator/=(const component_type &aScalar);
+        constexpr vector3 &operator+=(const vector3 &that);
+        constexpr vector3 &operator-=(const vector3 &that);
+        constexpr vector3 &operator/=(const vector3 &that);
 
-        component_type x = {0}, y = {0}, z = {0};
-
-    private:
-        constexpr static component_type IS_EFFECTIVELY_ZERO_THRESHOLD = static_cast<component_type>(1e-6);
     };
 
-    template <typename T> vector3<T> vector3<T>::min(const vector3<T> &a, const vector3<T> &b) {
-        return { std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z) };
-    }
-    template <typename T> vector3<T> vector3<T>::max(const vector3<T> &a, const vector3<T> &b) {
-        return { std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z) };
-    }
-
-    template <typename component_type> 
-    inline const vector3<component_type> vector3<component_type>::backward = {0, 0, -1};
-    template <typename component_type> 
-    inline const vector3<component_type> vector3<component_type>::down = {0, -1, 0};
-    template <typename component_type> 
-    inline const vector3<component_type> vector3<component_type>::forward = {0, 0, 1};
-    template <typename component_type> 
-    inline const vector3<component_type> vector3<component_type>::left = {-1, 0, 0};
-    template <typename component_type> 
-    inline const vector3<component_type> vector3<component_type>::one = {1, 1, 1};
-    template <typename component_type> 
-    inline const vector3<component_type> vector3<component_type>::right = {1, 0, 0};
-    template <typename component_type> 
-    inline const vector3<component_type> vector3<component_type>::up = {0, 1, 0};
-    template <typename component_type> 
-    inline const vector3<component_type> vector3<component_type>::zero = {0, 0, 0};
-
-    template<typename component_type> 
-    vector3<component_type> &vector3<component_type>::normalize() {
-        component_type length = this->length();
-        if (length != 0) {
-            x /= length;
-            y /= length;
-            z /= length;
-        }
-        return *this;
-    }
-
-    template<typename component_type> 
-    component_type vector3<component_type>::length() const {
-        return sqrt((x * x) + (y * y) + (z * z));
-    }
-
-    template<typename component_type> 
-    component_type vector3<component_type>::length_squared() const {
-        return (x * x) + (y * y) + (z * z);
-    }
-
-    template<typename component_type> 
-    bool vector3<component_type>::is_effectively_zero() const {
-        return length_squared() < IS_EFFECTIVELY_ZERO_THRESHOLD;
-    }
-
-    template<typename component_type> vector3<component_type> 
-    vector3<component_type>::normal() const {
-        if (is_effectively_zero()) return vector3::zero;
-        return vector3(*this).normalize();
-    }
-
-    template<typename component_type> 
-    component_type vector3<component_type>::distance_from(const vector3<component_type> &that) const {
-        const auto dx = that.x - x;
-        const auto dy = that.y - y;
-        const auto dz = that.z - z;
-        return std::sqrt(dx * dx + dy * dy + dz * dz);
-    }
-
+    //! linear interpolation, 
     template<typename component_type>
-    bool vector3<component_type>::operator==(const vector3<component_type> &that) const {
-        return x == that.x && y == that.y && z == that.z;
-    }
-
-    template<typename component_type>
-    bool vector3<component_type>::operator!=(const vector3<component_type> &that) const {
-        return x != that.x || y != that.y || z != that.z;
-    }
-
-    template<typename component_type>
-    vector3<component_type> &vector3<component_type>::operator/=(const vector3 &that) {
-        if (that.x == 0 || that.y == 0 || that.z == 0) 
-            throw std::domain_error("Division by zero in vector3::operator/");
-        
-        x /= that.x;
-        y /= that.y;
-        z /= that.z;
-
-        return *this;
-    }
-
-    template<typename component_type>
-    vector3<component_type> vector3<component_type>::operator/(const vector3<component_type> &that) const {
-        auto vec(*this);
-        return vec /= that;
-    }
-
-    template<typename component_type>
-    vector3<component_type> vector3<component_type>::operator+(const vector3<component_type> &that) const {
-        return {
-            x + that.x,
-            y + that.y,
-            z + that.z
-        };
-    }
-
-    template<typename component_type>
-    vector3<component_type> vector3<component_type>::operator-(const vector3<component_type> &that) const {
-        return {
-            x - that.x,
-            y - that.y,
-            z - that.z
-        };
-    }
-
-    template<typename component_type>
-    vector3<component_type> vector3<component_type>::operator-() const {
-        return {
-            x * -1,
-            y * -1,
-            z * -1
-        };
-    }
-
-    template<typename component_type>
-    vector3<component_type> vector3<component_type>::operator*(const component_type aScalar) const {
-        return {
-            x * aScalar,
-            y * aScalar,
-            z * aScalar
-        };
-    }
-
-    template<typename component_type>
-    component_type &vector3<component_type>::operator[](const size_t aComponentIndex) {
-        switch(aComponentIndex) {
-            case 0: return x;
-            case 1: return y;
-            case 2: return z;
-        }
-        throw std::out_of_range("vector3::operator[] index out of range");
-    }
-
-    template<typename component_type>
-    component_type vector3<component_type>::operator[](const size_t aComponentIndex) const {
-        switch(aComponentIndex) {
-            case 0: return x;
-            case 1: return y;
-            case 2: return z;
-        }
-        throw std::out_of_range("vector3::operator[] index out of range");
-    }
-
-    template<typename component_type>
-    vector3<component_type> &vector3<component_type>::operator+=(const vector3<component_type> &that) {
-        x += that.x;
-        y += that.y;
-        z += that.z;
-        return *this;
-    }
-
-    template<typename component_type>
-    vector3<component_type> &vector3<component_type>::operator-=(const vector3<component_type> &that) {
-        x -= that.x;
-        y -= that.y;
-        z -= that.z;
-        return *this;
-    }
-
-    template<typename component_type>
-    vector3<component_type> &vector3<component_type>::operator*=(const component_type &aScalar) {
-        x *= aScalar;
-        y *= aScalar;
-        z *= aScalar;
-        return *this;
-    }
-
-    template<typename component_type>
-    vector3<component_type>::vector3(const component_type &aX, const component_type &aY, const component_type &aZ)
-    : x(aX)
-    , y(aY)
-    , z(aZ)
-    {}
-
-    template<typename component_type>
-    vector3<component_type>::vector3(const component_type& a)
-    : vector3(a, a, a)
-    {}
-
-    template<typename component_type>
-    component_type vector3<component_type>::dot_product(const vector3<component_type> &that) const {
-        return { x * that.x + y * that.y + z * that.z };
-    }
-
-    template<typename component_type>
-    vector3<component_type> vector3<component_type>::cross_product(const vector3<component_type> &that) const {
-        return { 
-            y * that.z - z * that.y,
-            z * that.x - x * that.z,
-            x * that.y - y * that.x
-        };
-    }
-
-    template<typename component_type>
-    vector3<component_type> vector3<component_type>::element_wise_product(const vector3<component_type> &aOther) const {
-        return { 
-            x * aOther.x, 
-            y * aOther.y, 
-            z * aOther.z
-        };
-    }
+    [[nodiscard]] constexpr vector3<component_type> lerp(const vector3<component_type> &a,
+        const vector3<component_type> &b, const component_type t);
 }
 
-#endif
+#include <gdk/vector3.inl> // varies by implementation
 
+#endif
