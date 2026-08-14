@@ -37,6 +37,6 @@ if (MSVC)
     target_compile_options(gdkmath_cxx17_conformance PRIVATE /permissive- /W4 /WX)
 else()
     target_compile_options(gdkmath_cxx17_conformance PRIVATE
-        -pedantic-errors -Wall -Wextra -Werror)
+        -pedantic-errors -Wall -Wextra -Wfloat-conversion -Werror)
 endif()
 

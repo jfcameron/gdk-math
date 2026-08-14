@@ -77,37 +77,42 @@ namespace gdk {
             return normalizedMatrix.get(aColumn, aRow);
         };
 
-        component_type trace = r(0, 0) + r(1, 1) + r(2, 2);
+        const auto one = static_cast<component_type>(1);
+        const auto two = static_cast<component_type>(2);
+        const auto half = static_cast<component_type>(0.5);
+        const auto quarter = static_cast<component_type>(0.25);
+
+        const component_type trace = r(0, 0) + r(1, 1) + r(2, 2);
         quaternion_type q;
 
         if (trace > 0) {
-            component_type s = 0.5 / std::sqrt(trace + 1.0);
-            q.w = 0.25 / s;
+            const component_type s = half / std::sqrt(trace + one);
+            q.w = quarter / s;
             q.x = (r(2, 1) - r(1, 2)) * s;
             q.y = (r(0, 2) - r(2, 0)) * s;
             q.z = (r(1, 0) - r(0, 1)) * s;
         }
         else {
             if (r(0, 0) > r(1, 1) && r(0, 0) > r(2, 2)) {
-                component_type s = 2.0 * std::sqrt(1.0 + r(0, 0) - r(1, 1) - r(2, 2));
+                const component_type s = two * std::sqrt(one + r(0, 0) - r(1, 1) - r(2, 2));
                 q.w = (r(2, 1) - r(1, 2)) / s;
-                q.x = 0.25 * s;
+                q.x = quarter * s;
                 q.y = (r(0, 1) + r(1, 0)) / s;
                 q.z = (r(0, 2) + r(2, 0)) / s;
             }
             else if (r(1, 1) > r(2, 2)) {
-                component_type s = 2.0 * std::sqrt(1.0 + r(1, 1) - r(0, 0) - r(2, 2));
+                const component_type s = two * std::sqrt(one + r(1, 1) - r(0, 0) - r(2, 2));
                 q.w = (r(0, 2) - r(2, 0)) / s;
                 q.x = (r(0, 1) + r(1, 0)) / s;
-                q.y = 0.25 * s;
+                q.y = quarter * s;
                 q.z = (r(1, 2) + r(2, 1)) / s;
             }
             else {
-                component_type s = 2.0 * std::sqrt(1.0 + r(2, 2) - r(0, 0) - r(1, 1));
+                const component_type s = two * std::sqrt(one + r(2, 2) - r(0, 0) - r(1, 1));
                 q.w = (r(1, 0) - r(0, 1)) / s;
                 q.x = (r(0, 2) + r(2, 0)) / s;
                 q.y = (r(1, 2) + r(2, 1)) / s;
-                q.z = 0.25 * s;
+                q.z = quarter * s;
             }
         }
 
@@ -130,23 +135,25 @@ namespace gdk {
         set(1, 1, (-sqx + sqy - sqz + sqw) * invs);
         set(2, 2, (-sqx - sqy + sqz + sqw) * invs);
 
+        const auto two = static_cast<component_type>(2);
+
         auto tmp1 = q.x * q.y;
         auto tmp2 = q.z * q.w;
 
-        set(1, 0, 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs);
-        set(0, 1, 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs);
+        set(1, 0, two * (tmp1 - tmp2) * invs);
+        set(0, 1, two * (tmp1 + tmp2) * invs);
 
         tmp1 = q.x * q.z;
         tmp2 = q.y * q.w;
 
-        set(2, 0, 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs);
-        set(0, 2, 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs);
+        set(2, 0, two * (tmp1 + tmp2) * invs);
+        set(0, 2, two * (tmp1 - tmp2) * invs);
 
         tmp1 = q.y * q.z;
         tmp2 = q.x * q.w;
 
-        set(2, 1, 2.0 * static_cast<component_type>(tmp1 - tmp2) * invs);
-        set(1, 2, 2.0 * static_cast<component_type>(tmp1 + tmp2) * invs);
+        set(2, 1, two * (tmp1 - tmp2) * invs);
+        set(1, 2, two * (tmp1 + tmp2) * invs);
 
         get(0, 0) *= aScale.x;
         get(0, 1) *= aScale.x;
