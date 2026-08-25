@@ -7,31 +7,31 @@
 #include <cstddef>
 
 namespace gdk {
-    template<typename component_type>
+    template<arithmetic_component component_type>
     class vector2_storage {
     public:
         component_type x = {0}, y = {0};
     };
 
-    template<typename component_type>
+    template<arithmetic_component component_type>
     class vector3_storage {
     public:
         component_type x = {0}, y = {0}, z = {0};
     };
 
-    template<typename component_type>
+    template<arithmetic_component component_type>
     class vector4_storage {
     public:
         component_type x = {0.}, y = {0.}, z = {0.}, w = {1.};
     };
 
-    template<typename component_type>
+    template<arithmetic_component component_type>
     class quaternion_storage {
     public:
         component_type x = {0.}, y = {0.}, z = {0.}, w = {1.};
     };
 
-    template<typename component_type>
+    template<arithmetic_component component_type>
     class matrix3x3_storage {
     public:
         static constexpr std::size_t order{3};
@@ -51,7 +51,7 @@ namespace gdk {
         ~matrix3x3_storage() = default;
     };
 
-    template<typename component_type>
+    template<arithmetic_component component_type>
     class matrix4x4_storage {
     public:
         static constexpr std::size_t order{4};

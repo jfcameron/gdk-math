@@ -3,6 +3,7 @@
 #ifndef GDK_MATH_MAT3X3_H
 #define GDK_MATH_MAT3X3_H
 
+#include <gdk/math_concepts.h>
 #include <gdk/storage.inl> // varies by implementation 
 
 #include <array>
@@ -15,11 +16,9 @@ namespace gdk {
     /// \brief 3 by 3 matrix: the linear part of a transform, without translation
     /// - **column-major**: data layout is column first
     /// - **Storage order is part of the interface, it does not vary with implementations.**
-    template<typename component_type_param = float>
+    template<floating_point_component component_type_param = float>
     class matrix3x3 final : public matrix3x3_storage<component_type_param> {
     public:
-        static_assert(std::is_floating_point<component_type_param>::value,
-            "component_type must be a floating point type");
 
         using component_type = component_type_param;
         using order_type = std::size_t;
@@ -77,9 +76,6 @@ namespace gdk {
 
         //! component-wise equivalence
         [[nodiscard]] constexpr bool operator==(const matrix3x3<component_type> &other) const;
-
-        //! the negation of operator==
-        [[nodiscard]] constexpr bool operator!=(const matrix3x3<component_type> &other) const;
 
         constexpr matrix3x3(
             const component_type a00, const component_type a01, const component_type a02,

@@ -3,6 +3,7 @@
 #ifndef GDK_MATH_QUATERNION_H
 #define GDK_MATH_QUATERNION_H
 
+#include <gdk/math_concepts.h>
 #include <gdk/storage.inl> // varies by implementation
 
 #include <gdk/math_constants.h>
@@ -16,7 +17,7 @@
 
 namespace gdk {
     /// \brief Used to represent 3d rotations 
-    template<typename component_type_param = float>
+    template<floating_point_component component_type_param = float>
     class quaternion final : public quaternion_storage<component_type_param> {
     public:
         using component_type = component_type_param;
@@ -26,8 +27,6 @@ namespace gdk {
         using quaternion_storage<component_type_param>::z;
         using quaternion_storage<component_type_param>::w;
 
-        static_assert(std::is_floating_point<component_type>::value, 
-            "component_type must be a floating point type");
 
         //! unit length copy. 
         [[nodiscard]] quaternion<component_type> normalized() const;
@@ -70,7 +69,6 @@ namespace gdk {
         [[nodiscard]] constexpr quaternion<component_type> operator-() const;
 
         //! the negation of operator==
-        [[nodiscard]] constexpr bool operator!=(const quaternion<component_type> &other) const;
 
         //! construct from euler angles, in radians. YXZ 
         constexpr explicit quaternion(const vector3<component_type> &aEulerAngles);

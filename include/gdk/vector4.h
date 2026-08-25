@@ -3,6 +3,7 @@
 #ifndef GDK_MATH_VECTOR4_H
 #define GDK_MATH_VECTOR4_H
 
+#include <gdk/math_concepts.h>
 #include <gdk/storage.inl> // varies by implementation
 
 #include <gdk/vector3.h>
@@ -13,7 +14,7 @@ namespace gdk {
     /// \brief a homogeneous coordinate: a 3d position or direction plus w
     /// - w = 1 marks a position, so a transform's translation applies to it
     /// - w = 0 marks a direction, so it does not
-    template<typename component_type_param = float>
+    template<arithmetic_component component_type_param = float>
     class vector4 final : public vector4_storage<component_type_param> {
     public:
         using component_type = component_type_param;
@@ -30,7 +31,6 @@ namespace gdk {
         [[nodiscard]] constexpr vector3<component_type> to_point() const;
 
         [[nodiscard]] constexpr bool operator==(const vector4<component_type> &other) const;
-        [[nodiscard]] constexpr bool operator!=(const vector4<component_type> &other) const;
 
         vector4<component_type> &operator=(const vector4<component_type> &) = default;
 

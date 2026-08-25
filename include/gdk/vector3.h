@@ -3,6 +3,7 @@
 #ifndef GDK_MATH_VECTOR3_H
 #define GDK_MATH_VECTOR3_H
 
+#include <gdk/math_concepts.h>
 #include <gdk/storage.inl> // varies by implementation
 
 #include <gdk/math_constants.h>
@@ -17,7 +18,7 @@
 namespace gdk {
     /// \brief 3d vector used to represent position, scale, velocity, heading, euler angles, etc.
     /// - **right-handed**: +X right, +Y up, +Z back
-    template<typename component_type_param = float>
+    template<arithmetic_component component_type_param = float>
     class vector3 final : public vector3_storage<component_type_param> {
     public:
         using component_type = component_type_param;
@@ -26,10 +27,6 @@ namespace gdk {
         using vector3_storage<component_type_param>::y;
         using vector3_storage<component_type_param>::z;
 
-        static_assert(
-            std::is_arithmetic<component_type>::value && 
-            std::is_signed<component_type>::value, 
-            "vector3::component_type must be a signed arithmetic type");
 
         //! set a single scalar value to all three components. 
         constexpr explicit vector3(const component_type &aBroadcast);
@@ -74,7 +71,6 @@ namespace gdk {
         //! mirror this vector about a surface with the given normal. aNormal is assumed unit length.
         [[nodiscard]] constexpr vector3 reflect(const vector3 &aNormal) const;
 
-        [[nodiscard]] constexpr bool operator!=(const vector3 &that) const;
         [[nodiscard]] constexpr bool operator==(const vector3 &that) const;
 
         constexpr component_type &operator[](const std::size_t aComponentIndex);

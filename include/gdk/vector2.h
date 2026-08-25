@@ -3,6 +3,7 @@
 #ifndef GDK_MATH_VECTOR2_H
 #define GDK_MATH_VECTOR2_H
 
+#include <gdk/math_concepts.h>
 #include <gdk/storage.inl> // varies by implementation
 
 #include <gdk/math_constants.h>
@@ -17,16 +18,13 @@
 
 namespace gdk {
     /// \brief 2d vector used to represent position, speed, direction, normalized coordinates
-    template<typename component_type_param = float>
+    template<arithmetic_component component_type_param = float>
     class vector2 final : public vector2_storage<component_type_param> {
     public:
         using component_type = component_type_param;
 
         using vector2_storage<component_type_param>::x;
         using vector2_storage<component_type_param>::y;
-
-        static_assert(std::is_arithmetic<component_type>::value && std::is_signed<component_type>::value,
-            "component_type must be a signed arithmetic type");
 
         //! a new vector made of the largest components of two vectors
         static constexpr vector2 max(const vector2 &a, const vector2 &b);
@@ -72,7 +70,6 @@ namespace gdk {
         [[nodiscard]] constexpr vector2<component_type> reflect(const vector2<component_type> &aNormal) const;
 
         [[nodiscard]] constexpr bool operator==(const vector2<component_type> &other) const;
-        [[nodiscard]] constexpr bool operator!=(const vector2<component_type> &other) const;
 
         constexpr component_type &operator[](const std::size_t aComponentIndex);
         [[nodiscard]] constexpr component_type operator[](const std::size_t aComponentIndex) const;

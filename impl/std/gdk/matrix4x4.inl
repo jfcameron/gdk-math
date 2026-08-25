@@ -4,59 +4,59 @@
 #define GDK_MATH_IMPL_STD_MATRIX4X4_INL
 
 namespace gdk {
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr std::size_t matrix4x4<component_type>::index(order_type aX, order_type aY) const {
         return aX * order + aY;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr component_type matrix4x4<component_type>::basis_determinant() const {
         return get(0, 0) * (get(1, 1) * get(2, 2) - get(2, 1) * get(1, 2))
              - get(1, 0) * (get(0, 1) * get(2, 2) - get(2, 1) * get(0, 2))
              + get(2, 0) * (get(0, 1) * get(1, 2) - get(1, 1) * get(0, 2));
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix4x4<component_type>::set(const order_type aX, const order_type aY,
         const component_type aValue) {
         m[index(aX, aY)] = aValue;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr component_type &matrix4x4<component_type>::get(const order_type aX, const order_type aY) {
         return m[index(aX, aY)];
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr const component_type &matrix4x4<component_type>::get(const order_type aX,
         const order_type aY) const {
         return m[index(aX, aY)];
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr const component_type &matrix4x4<component_type>::front() const {
         return m.front();
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix4x4<component_type>::set_to_identity() {
         *this = matrix4x4<component_type>();
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix4x4<component_type>::set_translation(const vector3_type &aTranslation) {
         set(3, 0, aTranslation.x);
         set(3, 1, aTranslation.y);
         set(3, 2, aTranslation.z);
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr typename matrix4x4<component_type>::vector3_type
     matrix4x4<component_type>::translation() const {
         return vector3_type(get(3, 0), get(3, 1), get(3, 2));
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     typename matrix4x4<component_type>::quaternion_type
     matrix4x4<component_type>::rotation() const {
         if (basis_determinant() < 0) throw std::domain_error(
@@ -119,7 +119,7 @@ namespace gdk {
         return q;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix4x4<component_type>::set_rotation_and_scale(const quaternion_type &aRotation,
         const vector3_type &aScale) {
         const quaternion_type &q = aRotation;
@@ -168,7 +168,7 @@ namespace gdk {
         get(2, 2) *= aScale.z;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     void matrix4x4<component_type>::set_rotation(const quaternion_type &aRotation) {
         if (basis_determinant() < 0) throw std::domain_error(
             "matrix4x4::set_rotation() on a mirrored transform: scale() cannot carry the sign, so "
@@ -177,12 +177,12 @@ namespace gdk {
         return set_rotation_and_scale(aRotation, scale());
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     void matrix4x4<component_type>::set_scale(const vector3_type &aScale) {
         return set_rotation_and_scale(rotation(), aScale);
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix4x4<component_type>::transpose() {
         for (order_type i{0}; i < order; ++i)
             for (order_type j{static_cast<order_type>(i + 1)}; j < order; ++j)
@@ -193,7 +193,7 @@ namespace gdk {
                 }
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix4x4<component_type> matrix4x4<component_type>::transposed() const {
         matrix4x4<component_type> a = *this;
 
@@ -202,7 +202,7 @@ namespace gdk {
         return a;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr component_type matrix4x4<component_type>::determinant() const {
         const component_type s0 = get(0, 0) * get(1, 1) - get(1, 0) * get(0, 1);
         const component_type s1 = get(0, 0) * get(1, 2) - get(1, 0) * get(0, 2);
@@ -221,7 +221,7 @@ namespace gdk {
         return s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix4x4<component_type> matrix4x4<component_type>::inversed() const {
         matrix4x4<component_type> a = *this;
 
@@ -230,7 +230,7 @@ namespace gdk {
         return a;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix4x4<component_type>::inverse() {
         component_type s0 = get(0, 0) * get(1, 1) - get(1, 0) * get(0, 1);
         component_type s1 = get(0, 0) * get(1, 2) - get(1, 0) * get(0, 2);
@@ -282,7 +282,7 @@ namespace gdk {
         );
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix4x4<component_type>::inverse_affine() { 
         component_type rot[3][3] = {
             { get(0, 0), get(0, 1), get(0, 2) },
@@ -312,7 +312,7 @@ namespace gdk {
         );
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix4x4<component_type> &matrix4x4<component_type>::set(
         const component_type m00, const component_type m01, const component_type m02, const component_type m03, 
         const component_type m10, const component_type m11, const component_type m12, const component_type m13,
@@ -341,7 +341,7 @@ namespace gdk {
         return *this;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix4x4<component_type> &matrix4x4<component_type>::multiply(const matrix4x4 &right) {
         set(
             get(0, 0) * right.get(0, 0) + get(1, 0) * right.get(0, 1) + get(2, 0) * right.get(0, 2) + get(3, 0) * right.get(0, 3),
@@ -364,7 +364,7 @@ namespace gdk {
         return *this;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     typename matrix4x4<component_type>::vector3_type matrix4x4<component_type>::scale() const {
         return {
             std::sqrt(get(0, 0) * get(0, 0) + get(0, 1) * get(0, 1) + get(0, 2) * get(0, 2)),
@@ -373,7 +373,7 @@ namespace gdk {
         };
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix4x4<component_type> matrix4x4<component_type>::operator*(const matrix4x4 &other) const {
         matrix4x4 copy(*this);
         copy *= other;
@@ -381,19 +381,14 @@ namespace gdk {
         return copy;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix4x4<component_type> &matrix4x4<component_type>::operator*=(const matrix4x4 &other) {
         multiply(other);
 
         return *this;
     }
 
-    template<typename component_type>
-    constexpr bool matrix4x4<component_type>::operator!=(const matrix4x4<component_type> &other) const {
-        return !(*this == other);
-    }
-
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr bool matrix4x4<component_type>::operator==(const matrix4x4<component_type> &other) const {
         for(order_type i = 0; i < order; ++i) for (order_type j{0}; j < order; ++j)
             if (get(i, j) != other.get(i, j))
@@ -402,7 +397,7 @@ namespace gdk {
         return true;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix4x4<component_type>::matrix4x4(
         const component_type a00, const component_type a01, const component_type a02, const component_type a03, 
         const component_type a10, const component_type a11, const component_type a12, const component_type a13,
@@ -415,7 +410,7 @@ namespace gdk {
             a30, a31, a32, a33);
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix4x4<component_type>::matrix4x4(
         const vector3_type &aTranslationComponent, 
         const quaternion_type &aRotationComponent,
@@ -425,7 +420,7 @@ namespace gdk {
         set_translation(aTranslationComponent);
     }
 
-    template<typename component_type> 
+    template<floating_point_component component_type> 
     const matrix4x4<component_type> matrix4x4<component_type>::identity = matrix4x4<component_type>();
 }
 

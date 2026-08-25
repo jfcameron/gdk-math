@@ -3,6 +3,7 @@
 #ifndef GDK_MATH_MAT4X4_H
 #define GDK_MATH_MAT4X4_H
 
+#include <gdk/math_concepts.h>
 #include <gdk/storage.inl> // varies by implementation 
 
 #include <gdk/quaternion.h>
@@ -23,11 +24,9 @@ namespace gdk {
     /// - **right-handed**: +X right, +Y up, +Z back
     /// - **column-major**: data layout is column first 
     /// - **Storage order is part of the interface, it does not vary with implementations.** 
-    template<typename component_type_param = float>
+    template<floating_point_component component_type_param = float>
     class matrix4x4 final : public matrix4x4_storage<component_type_param> {
     public:
-        static_assert(std::is_floating_point<component_type_param>::value, 
-            "component_type must be a floating point type");
 
         using component_type = component_type_param;
         using order_type = std::size_t;
@@ -117,9 +116,6 @@ namespace gdk {
         constexpr matrix4x4 &operator*=(const matrix4x4 &other);
 
         matrix4x4 &operator=(const matrix4x4&) = default; 
-
-        //! the negation of operator==
-        [[nodiscard]] constexpr bool operator!=(const matrix4x4<component_type> &other) const;
 
         //! component-wise equivalance
         [[nodiscard]] constexpr bool operator==(const matrix4x4<component_type> &other) const;

@@ -4,39 +4,39 @@
 #define GDK_MATH_IMPL_STD_MATRIX3X3_INL
 
 namespace gdk {
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr std::size_t matrix3x3<component_type>::index(order_type aX, order_type aY) const {
         return aX * order + aY;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix3x3<component_type>::set(const order_type aX, const order_type aY,
         const component_type aValue) {
         m[index(aX, aY)] = aValue;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr component_type &matrix3x3<component_type>::get(const order_type aX, const order_type aY) {
         return m[index(aX, aY)];
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr const component_type &matrix3x3<component_type>::get(const order_type aX,
         const order_type aY) const {
         return m[index(aX, aY)];
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr const component_type &matrix3x3<component_type>::front() const {
         return m.front();
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix3x3<component_type>::set_to_identity() {
         *this = matrix3x3<component_type>();
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix3x3<component_type> &matrix3x3<component_type>::set(
         const component_type m00, const component_type m01, const component_type m02,
         const component_type m10, const component_type m11, const component_type m12,
@@ -48,7 +48,7 @@ namespace gdk {
         return *this;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix3x3<component_type> &matrix3x3<component_type>::multiply(const matrix3x3 &right) {
         return set(
             get(0, 0) * right.get(0, 0) + get(1, 0) * right.get(0, 1) + get(2, 0) * right.get(0, 2),
@@ -64,7 +64,7 @@ namespace gdk {
             get(0, 2) * right.get(2, 0) + get(1, 2) * right.get(2, 1) + get(2, 2) * right.get(2, 2));
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix3x3<component_type>::transpose() {
         for (order_type i{0}; i < order; ++i)
             for (order_type j{static_cast<order_type>(i + 1)}; j < order; ++j)
@@ -75,7 +75,7 @@ namespace gdk {
                 }
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix3x3<component_type> matrix3x3<component_type>::transposed() const {
         matrix3x3<component_type> a = *this;
 
@@ -84,7 +84,7 @@ namespace gdk {
         return a;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr component_type matrix3x3<component_type>::determinant() const {
         const auto r = [this](const order_type aRow, const order_type aColumn) {
             return get(aColumn, aRow);
@@ -95,7 +95,7 @@ namespace gdk {
              + r(0, 2) * (r(1, 0) * r(2, 1) - r(1, 1) * r(2, 0));
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr void matrix3x3<component_type>::inverse() {
         const auto det = determinant();
 
@@ -123,7 +123,7 @@ namespace gdk {
                 set(column, row, b[row][column]);
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix3x3<component_type> matrix3x3<component_type>::inversed() const {
         matrix3x3<component_type> a = *this;
 
@@ -132,7 +132,7 @@ namespace gdk {
         return a;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix3x3<component_type> matrix3x3<component_type>::operator*(const matrix3x3 &other) const {
         matrix3x3 copy(*this);
         copy *= other;
@@ -140,14 +140,14 @@ namespace gdk {
         return copy;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix3x3<component_type> &matrix3x3<component_type>::operator*=(const matrix3x3 &other) {
         multiply(other);
 
         return *this;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr bool matrix3x3<component_type>::operator==(const matrix3x3<component_type> &other) const {
         for (order_type i = 0; i < order; ++i) for (order_type j{0}; j < order; ++j)
             if (get(i, j) != other.get(i, j))
@@ -156,12 +156,7 @@ namespace gdk {
         return true;
     }
 
-    template<typename component_type>
-    constexpr bool matrix3x3<component_type>::operator!=(const matrix3x3<component_type> &other) const {
-        return !(*this == other);
-    }
-
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr matrix3x3<component_type>::matrix3x3(
         const component_type a00, const component_type a01, const component_type a02,
         const component_type a10, const component_type a11, const component_type a12,
@@ -171,7 +166,7 @@ namespace gdk {
             a20, a21, a22);
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     const matrix3x3<component_type> matrix3x3<component_type>::identity = matrix3x3<component_type>();
 }
 

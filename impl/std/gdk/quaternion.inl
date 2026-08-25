@@ -4,7 +4,7 @@
 #define GDK_MATH_IMPL_STD_QUATERNION_INL
 
 namespace gdk {
-    template<typename component_type>
+    template<floating_point_component component_type>
     quaternion<component_type> quaternion<component_type>::normalized() const {
         const component_type magnitude = std::sqrt(x * x + y * y + z * z + w * w);
 
@@ -15,7 +15,7 @@ namespace gdk {
         return {x * invMagnitude, y * invMagnitude, z * invMagnitude, w * invMagnitude};
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     void quaternion<component_type>::set_from_euler(const vector3<component_type> &aEulerAngles) {
         static const component_type HALF(0.5);
 
@@ -36,7 +36,7 @@ namespace gdk {
         w = ch * cp * cr + sh * sp * sr;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     vector3<component_type> quaternion<component_type>::to_euler() const {
         const component_type sinPitch = std::max(static_cast<component_type>(-1),
             std::min(static_cast<component_type>(1), 2 * (w * x - y * z)));
@@ -52,18 +52,18 @@ namespace gdk {
         return {pitch, heading, roll};
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr component_type quaternion<component_type>::dot_product(
         const quaternion<component_type> &other) const {
         return x * other.x + y * other.y + z * other.z + w * other.w;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     component_type quaternion<component_type>::angle() const {
         return static_cast<component_type>(2) * std::atan2(std::sqrt(x * x + y * y + z * z), w);
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     vector3<component_type> quaternion<component_type>::axis() const {
         const auto lengthSquared = x * x + y * y + z * z;
 
@@ -75,29 +75,24 @@ namespace gdk {
         return {x * invLength, y * invLength, z * invLength};
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr quaternion<component_type> quaternion<component_type>::operator*(
         const component_type aScalar) const {
         return {x * aScalar, y * aScalar, z * aScalar, w * aScalar};
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr quaternion<component_type> quaternion<component_type>::operator+(
         const quaternion<component_type> &other) const {
         return {x + other.x, y + other.y, z + other.z, w + other.w};
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr quaternion<component_type> quaternion<component_type>::operator-() const {
         return {-x, -y, -z, -w};
     }
 
-    template<typename component_type>
-    constexpr bool quaternion<component_type>::operator!=(const quaternion<component_type> &other) const {
-        return !(*this == other);
-    }
-
-    template<typename component_type>
+    template<floating_point_component component_type>
     quaternion<component_type> quaternion<component_type>::from_angle_axis(
         const component_type aAngle, const vector3<component_type> &aAxis) {
         const auto lengthSquared = aAxis.length_squared();
@@ -114,7 +109,7 @@ namespace gdk {
             std::cos(half)};
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr quaternion<component_type> quaternion<component_type>::inverse() const {
         const component_type normSquared = x * x + y * y + z * z + w * w;
 
@@ -125,17 +120,17 @@ namespace gdk {
         return {-x * invNorm, -y * invNorm, -z * invNorm, w * invNorm};
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr quaternion<component_type> quaternion<component_type>::inverse_unit() const {
         return {-x, -y, -z, w};
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr bool quaternion<component_type>::operator==(const quaternion<component_type> &other) const {
         return x == other.x && y == other.y && z == other.z && w == other.w;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr quaternion<component_type> &quaternion<component_type>::operator*=(
         const component_type aScalar) {
         x *= aScalar;
@@ -146,24 +141,24 @@ namespace gdk {
         return *this;
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr quaternion<component_type>::quaternion(const vector3<component_type> &aEulerAngles) {
         set_from_euler(aEulerAngles);
     }
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     constexpr quaternion<component_type>::quaternion(const component_type &aX, const component_type &aY,
         const component_type &aZ, const component_type &aW)
     : quaternion_storage<component_type>{aX, aY, aZ, aW}
     {}
 
-    template<typename component_type>
+    template<floating_point_component component_type>
     quaternion<component_type> quaternion<component_type>::from_euler(
         const vector3<component_type> &aVector) {
         return quaternion(aVector);
     }
 
-    template <typename component_type>
+    template<floating_point_component component_type>
     quaternion<component_type> nlerp(const quaternion<component_type> &a,
         const quaternion<component_type> &b, const component_type t) {
         const auto adjusted = a.dot_product(b) < static_cast<component_type>(0) ? -b : b;
@@ -171,7 +166,7 @@ namespace gdk {
         return (a * (static_cast<component_type>(1) - t) + adjusted * t).normalized();
     }
 
-    template <typename component_type>
+    template<floating_point_component component_type>
     quaternion<component_type> slerp(const quaternion<component_type> &a,
         const quaternion<component_type> &b, const component_type t) {
         constexpr auto LINEAR_THRESHOLD = static_cast<component_type>(0.9995);
@@ -196,7 +191,7 @@ namespace gdk {
         return a * scaleA + adjusted * scaleB;
     }
 
-    template <typename component_type>
+    template<floating_point_component component_type>
     constexpr quaternion<component_type> operator*(const quaternion<component_type> &a,
         const quaternion<component_type> &b) {
         return {
@@ -207,7 +202,7 @@ namespace gdk {
         };
     }
 
-    template <typename component_type>
+    template<floating_point_component component_type>
     const quaternion<component_type> quaternion<component_type>::identity = quaternion();
 }
 
