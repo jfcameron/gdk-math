@@ -101,6 +101,105 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: results match the single-operand operat
     }
 }
 
+TEMPLATE_LIST_TEST_CASE("gdk-math batch: the SIMD kernel agrees with the scalar one",
+    "[batch]", type::floating_point)
+{
+    using T = TestType;
+
+    const auto m = affine<T>();
+
+    std::vector<vector3<T>> points;
+    for (int i = 0; i < 40; ++i)
+        points.push_back({T(i * 0.37 - 5.0), T(i * -0.91 + 2.0), T(i * 1.13 - 8.0)});
+
+    SECTION("**every batch length matches operator* exactly, tail included**")
+    {
+        for (std::size_t n = 0; n <= points.size(); ++n) {
+            const auto source = std::vector<vector3<T>>(points.begin(), points.begin() + n);
+
+            std::vector<vector3<T>> transformed(n), directions(n), normals(n), projected(n), rotated(n);
+
+            auto perspective = m;
+            perspective.set(0, 3, T(0.2));
+            perspective.set(1, 3, T(-0.1));
+            perspective.set(2, 3, T(0.35));
+
+            const auto rotation = quaternion<T>::from_euler({T(0.3), T(-0.7), T(1.1)});
+
+            transform_points(m, source, transformed);
+            transform_directions(m, source, directions);
+            transform_normals(m, source, normals);
+            project_points(perspective, source, projected);
+            rotate_directions(rotation, source, rotated);
+
+            const auto linear = upper_left(m);
+            const auto normalMatrix = normal_matrix(m);
+
+            for (std::size_t i = 0; i < n; ++i) {
+                INFO("length " << n << ", element " << i);
+
+                REQUIRE(transformed[i] == m * source[i]);
+                REQUIRE(directions[i] == linear * source[i]);
+                REQUIRE(normals[i] == normalMatrix * source[i]);
+                REQUIRE(projected[i] == perspective * source[i]);
+                REQUIRE(rotated[i] == rotation * source[i]);
+            }
+        }
+    }
+
+    SECTION("**a point projecting to w == 0 is passed through, as to_point does**")
+    {
+        auto degenerate = matrix4x4<T>::identity;
+        degenerate.set(0, 3, T(0));
+        degenerate.set(1, 3, T(0));
+        degenerate.set(2, 3, T(0));
+        degenerate.set(3, 3, T(0));
+
+        for (std::size_t n = 1; n <= 9; ++n) {
+            const auto source = std::vector<vector3<T>>(points.begin(), points.begin() + n);
+
+            std::vector<vector3<T>> out(n);
+
+            project_points(degenerate, source, out);
+
+            for (std::size_t i = 0; i < n; ++i) {
+                INFO("length " << n << ", element " << i);
+                REQUIRE(out[i] == degenerate * source[i]);
+            }
+        }
+    }
+
+    SECTION("in place matches out of place at every length")
+    {
+        for (std::size_t n = 0; n <= points.size(); ++n) {
+            std::vector<vector3<T>> inPlace(points.begin(), points.begin() + n);
+            std::vector<vector3<T>> outOfPlace(n);
+
+            transform_points(m, inPlace, outOfPlace);
+            transform_points(m, inPlace);
+
+            INFO("length " << n);
+            REQUIRE(inPlace == outOfPlace);
+        }
+    }
+
+    SECTION("it does not write past the source length into a longer destination")
+    {
+        const auto sentinel = vector3<T>{T(-999), T(-999), T(-999)};
+
+        for (std::size_t n = 1; n <= 9; ++n) {
+            const auto source = std::vector<vector3<T>>(points.begin(), points.begin() + n);
+
+            std::vector<vector3<T>> destination(n + 3, sentinel);
+
+            transform_points(m, source, destination);
+
+            INFO("length " << n);
+            for (std::size_t i = n; i < destination.size(); ++i) REQUIRE(destination[i] == sentinel);
+        }
+    }
+}
+
 TEMPLATE_LIST_TEST_CASE("gdk-math batch: the edges", "[batch]", type::floating_point)
 {
     using T = TestType;

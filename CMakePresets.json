@@ -92,6 +92,15 @@
       "cacheVariables": {
         "GDK_MATH_FAST_TRANSCENDENTALS": "ON"
       }
+    },
+    {
+      "name": "linux-gcc-no-simd",
+      "displayName": "Linux / gcc / scalar batch kernels",
+      "description": "Builds the batch functions without SIMD. Every target lacking SSE2 takes that path and nothing else covers it.",
+      "inherits": "linux-gcc",
+      "cacheVariables": {
+        "GDK_MATH_SIMD": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -163,6 +172,19 @@
     {
       "name": "linux-gcc-fast-transcendentals",
       "configurePreset": "linux-gcc-fast-transcendentals",
+      "targets": [
+        "gdkmath_test_0",
+        "gdkmath_cxx20_conformance"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-gcc-no-simd",
+      "configurePreset": "linux-gcc-no-simd",
       "targets": [
         "gdkmath_test_0",
         "gdkmath_cxx20_conformance"
@@ -247,6 +269,23 @@
     {
       "name": "linux-gcc-fast-transcendentals",
       "configurePreset": "linux-gcc-fast-transcendentals",
+      "filter": {
+        "include": {
+          "name": "gdkmath_test_0"
+        }
+      },
+      "output": {
+        "outputOnFailure": true
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-gcc-no-simd",
+      "configurePreset": "linux-gcc-no-simd",
       "filter": {
         "include": {
           "name": "gdkmath_test_0"

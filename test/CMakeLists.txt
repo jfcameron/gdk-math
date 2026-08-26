@@ -33,7 +33,9 @@ target_include_directories(gdkmath_cxx20_conformance
     PRIVATE "${gdkmath_INCLUDE_DIRECTORIES}")
 
 target_compile_definitions(gdkmath_cxx20_conformance
-    PRIVATE GDK_MATH_FAST_TRANSCENDENTALS=${GDK_MATH_FAST_TRANSCENDENTALS_VALUE})
+    PRIVATE
+        GDK_MATH_FAST_TRANSCENDENTALS=${GDK_MATH_FAST_TRANSCENDENTALS_VALUE}
+        GDK_MATH_SIMD=${GDK_MATH_SIMD_VALUE})
 
 set_target_properties(gdkmath_cxx20_conformance PROPERTIES
     CXX_STANDARD 20

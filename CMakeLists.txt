@@ -17,6 +17,9 @@ option(GDK_MATH_STRICT_FP
 option(GDK_MATH_FAST_TRANSCENDENTALS
     "Approximate acos and sin with polynomials where a bounded angular error is acceptable" OFF)
 
+option(GDK_MATH_SIMD
+    "Use SIMD kernels in the batch functions" ON)
+
 set(GDK_MATH_BACKEND_INCLUDE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/impl/${GDK_MATH_BACKEND}")
 
 if (NOT IS_DIRECTORY "${GDK_MATH_BACKEND_INCLUDE_DIRECTORY}")
@@ -93,8 +96,16 @@ else()
     set(GDK_MATH_FAST_TRANSCENDENTALS_VALUE 0)
 endif()
 
+if (GDK_MATH_SIMD)
+    set(GDK_MATH_SIMD_VALUE 1)
+else()
+    set(GDK_MATH_SIMD_VALUE 0)
+endif()
+
 target_compile_definitions(gdkmath
-    INTERFACE GDK_MATH_FAST_TRANSCENDENTALS=${GDK_MATH_FAST_TRANSCENDENTALS_VALUE})
+    INTERFACE
+        GDK_MATH_FAST_TRANSCENDENTALS=${GDK_MATH_FAST_TRANSCENDENTALS_VALUE}
+        GDK_MATH_SIMD=${GDK_MATH_SIMD_VALUE})
 
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/math_config.h.in"

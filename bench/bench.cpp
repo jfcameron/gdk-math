@@ -1,7 +1,5 @@
 // © Joseph Cameron - All Rights Reserved
 
-/// \file used to compare the performance of different implementations
-
 #include <gdk/math.h>
 
 #include <algorithm>
@@ -226,6 +224,29 @@ int main(int argc, char **argv) {
         const auto linear = upper_left(single);
         for (std::size_t i = 0; i < COUNT; ++i) { auto r = linear * a3[i]; escape(r); acc += r.x; }
         sink += acc;
+    }));
+
+    std::vector<vec3> batchOut(COUNT);
+
+    report("transform_points", ns_per_op(COUNT, PASSES, [&]{
+        transform_points<float>(single, a3, batchOut);
+        sink += batchOut[0].x;
+    }));
+    report("transform_directions", ns_per_op(COUNT, PASSES, [&]{
+        transform_directions<float>(single, a3, batchOut);
+        sink += batchOut[0].x;
+    }));
+    report("transform_normals", ns_per_op(COUNT, PASSES, [&]{
+        transform_normals<float>(single, a3, batchOut);
+        sink += batchOut[0].x;
+    }));
+    report("project_points", ns_per_op(COUNT, PASSES, [&]{
+        project_points<float>(single, a3, batchOut);
+        sink += batchOut[0].x;
+    }));
+    report("rotate_directions", ns_per_op(COUNT, PASSES, [&]{
+        rotate_directions<float>(aq[0], a3, batchOut);
+        sink += batchOut[0].x;
     }));
 
     g_checksum = sink;
