@@ -14,6 +14,9 @@ set(GDK_MATH_BACKEND "std" CACHE STRING
 option(GDK_MATH_STRICT_FP
     "Build gdk-math for reproducibility across machines rather than for speed" OFF)
 
+option(GDK_MATH_FAST_TRANSCENDENTALS
+    "Approximate acos and sin with polynomials where a bounded angular error is acceptable" OFF)
+
 set(GDK_MATH_BACKEND_INCLUDE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/impl/${GDK_MATH_BACKEND}")
 
 if (NOT IS_DIRECTORY "${GDK_MATH_BACKEND_INCLUDE_DIRECTORY}")
@@ -83,6 +86,15 @@ if (GDK_MATH_STRICT_FP)
 else()
     set(GDK_MATH_STRICT_FP_VALUE 0)
 endif()
+
+if (GDK_MATH_FAST_TRANSCENDENTALS)
+    set(GDK_MATH_FAST_TRANSCENDENTALS_VALUE 1)
+else()
+    set(GDK_MATH_FAST_TRANSCENDENTALS_VALUE 0)
+endif()
+
+target_compile_definitions(gdkmath
+    INTERFACE GDK_MATH_FAST_TRANSCENDENTALS=${GDK_MATH_FAST_TRANSCENDENTALS_VALUE})
 
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/math_config.h.in"

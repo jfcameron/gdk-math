@@ -15,6 +15,10 @@
 #include <stdexcept>
 #include <type_traits>
 
+#ifndef GDK_MATH_FAST_TRANSCENDENTALS
+#define GDK_MATH_FAST_TRANSCENDENTALS 0
+#endif
+
 namespace gdk {
     /// \brief Used to represent 3d rotations 
     template<floating_point_component component_type_param = float>
@@ -93,6 +97,8 @@ namespace gdk {
     };
 
     //! spherical linear interpolation: constant angular velocity along the shorter arc
+    ///
+    /// Interpolates for t in [0, 1] and extrapolates along the same great circle outside it.
     template <typename component_type>
     [[nodiscard]] quaternion<component_type> slerp(const quaternion<component_type> &a,
         const quaternion<component_type> &b, const component_type t);

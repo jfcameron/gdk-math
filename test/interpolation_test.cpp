@@ -24,6 +24,41 @@ namespace {
         for (const auto &v : {vector3<T>::right, vector3<T>::up, vector3<T>::forward})
             require_near(a * v, b * v, aMargin);
     }
+
+    template<typename T>
+    double rotation_error_degrees(const quaternion<double> &reference, const quaternion<T> &actual) {
+        const double n = std::sqrt(static_cast<double>(actual.x) * actual.x + static_cast<double>(actual.y) * actual.y +
+            static_cast<double>(actual.z) * actual.z + static_cast<double>(actual.w) * actual.w);
+
+        const double x = actual.x / n, y = actual.y / n, z = actual.z / n, w = actual.w / n;
+
+        const auto chord = [&](const double sign) {
+            const double dx = reference.x - sign * x, dy = reference.y - sign * y;
+            const double dz = reference.z - sign * z, dw = reference.w - sign * w;
+
+            return std::sqrt(dx * dx + dy * dy + dz * dz + dw * dw);
+        };
+
+        const double d = std::min(chord(1.0), chord(-1.0));
+
+        return 2.0 * std::asin(std::min(1.0, d * 0.5)) * (180.0 / 3.14159265358979323846);
+    }
+
+    quaternion<double> slerp_reference(const quaternion<double> &a, const quaternion<double> &b, const double t) {
+        double c = a.dot_product(b);
+        auto adjusted = b;
+
+        if (c < 0.0) {
+            adjusted = -b;
+            c = -c;
+        }
+
+        if (c > 0.9995) return nlerp(a, adjusted, t);
+
+        const double theta = std::acos(c), sinTheta = std::sin(theta);
+
+        return a * (std::sin((1.0 - t) * theta) / sinTheta) + adjusted * (std::sin(t * theta) / sinTheta);
+    }
 }
 
 TEMPLATE_LIST_TEST_CASE("gdk::quaternion axis-angle construction", "[quaternion][interpolation]", type::floating_point)
@@ -136,7 +171,7 @@ TEMPLATE_LIST_TEST_CASE("gdk::slerp", "[quaternion][interpolation]", type::float
     {
         const auto negated = -end;
 
-        require_same_rotation(negated, end);   // the premise: they are the same rotation
+        require_same_rotation(negated, end);   
 
         const auto viaPositive = slerp(start, end, static_cast<TestType>(0.5));
         const auto viaNegative = slerp(start, negated, static_cast<TestType>(0.5));
@@ -163,6 +198,63 @@ TEMPLATE_LIST_TEST_CASE("gdk::slerp", "[quaternion][interpolation]", type::float
     {
         for (const auto t : {TestType(0), TestType(0.25), TestType(0.5), TestType(1)})
             require_same_rotation(slerp(end, end, t), end);
+    }
+}
+
+TEMPLATE_LIST_TEST_CASE("gdk::slerp accuracy", "[quaternion][interpolation]", type::floating_point)
+{
+    using vec = vector3<TestType>;
+    using quat = quaternion<TestType>;
+
+#if GDK_MATH_FAST_TRANSCENDENTALS
+    constexpr double TOLERANCE_DEGREES = 0.002;
+#else
+    constexpr double TOLERANCE_DEGREES = 1e-4;
+#endif
+
+    SECTION("**it holds its documented error bound across the whole arc**")
+    {
+        double worst = 0;
+
+        for (const auto angle : {0.02f, 0.06f, 0.3f, 0.9f, 1.5f, 2.2f, 2.8f, 3.1f}) {
+            const auto a = quat::from_angle_axis(0.4f, vec(1, 2, 3).normal());
+            const auto b = a * quat::from_angle_axis(angle, vec(-2, 1, 0.5f).normal());
+
+            const quaternion<double> aRef(a.x, a.y, a.z, a.w), bRef(b.x, b.y, b.z, b.w);
+
+            for (int step = 0; step <= 20; ++step) {
+                const auto t = static_cast<TestType>(step * 0.05);
+
+                worst = std::max(worst, rotation_error_degrees(
+                    slerp_reference(aRef, bRef, static_cast<double>(t)), slerp(a, b, t)));
+            }
+        }
+
+        INFO("worst error " << worst << " degrees against a tolerance of " << TOLERANCE_DEGREES);
+        REQUIRE(worst < TOLERANCE_DEGREES);
+    }
+
+    SECTION("the endpoints stay exact on either path")
+    {
+        const auto a = quat::from_angle_axis(0.4f, vec::up);
+        const auto b = quat::from_angle_axis(2.4f, vec(1, 1, 0).normal());
+
+        const double margin = TOLERANCE_DEGREES * (3.14159265358979323846 / 180.0);
+
+        require_same_rotation(slerp(a, b, static_cast<TestType>(0)), a, margin);
+        require_same_rotation(slerp(a, b, static_cast<TestType>(1)), b, margin);
+    }
+
+    SECTION("it is still unit length on either path")
+    {
+        const auto a = quat::from_angle_axis(0.4f, vec::up);
+        const auto b = quat::from_angle_axis(2.9f, vec(0, 1, 3).normal());
+
+        for (TestType t = 0; t <= 1; t += static_cast<TestType>(0.05)) {
+            const auto q = slerp(a, b, t);
+
+            REQUIRE(std::sqrt(q.dot_product(q)) == Approx(1.0f).margin(1e-4f));
+        }
     }
 }
 

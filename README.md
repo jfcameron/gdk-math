@@ -1,6 +1,6 @@
 # gdk-math
 
-math library for 3d games. Strict C++20. header-only.
+math library for 3d games. Strict C++20. 
 
 Right-handed: **+X** right, **+Y** up, **+Z** back, so forward is −Z.
 
@@ -23,6 +23,7 @@ Two concepts constrain the component type, because the types have two different 
 | --- | --- | --- |
 | `GDK_MATH_BACKEND` | `std` | which directory under `impl/` supplies the implementation |
 | `GDK_MATH_STRICT_FP` | `OFF` | reproducibility across machines rather than speed |
+| `GDK_MATH_FAST_TRANSCENDENTALS` | `OFF` | polynomial `acos`/`sin` in `slerp`: ~1.3x, bounded angular error |
 | `JFC_BUILD_TESTS` | `ON` | | whether or not to build tests
 | `JFC_BUILD_BENCH` | `OFF` | builds one `gdkmath_bench_<backend>` per directory under `impl/` |
 | `JFC_BUILD_DOCS` | `ON` | | whether or not to generate documentation

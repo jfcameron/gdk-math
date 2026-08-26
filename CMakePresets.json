@@ -83,6 +83,15 @@
       "cacheVariables": {
         "JFC_BUILD_BENCH": "ON"
       }
+    },
+    {
+      "name": "linux-gcc-fast-transcendentals",
+      "displayName": "Linux / gcc / approximated transcendentals",
+      "description": "Builds slerp's polynomial path. Nothing else covers it, and the accuracy tests assert a different bound here.",
+      "inherits": "linux-gcc",
+      "cacheVariables": {
+        "GDK_MATH_FAST_TRANSCENDENTALS": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -91,7 +100,7 @@
       "configurePreset": "linux-gcc",
       "targets": [
         "gdkmath_test_0",
-        "gdkmath_cxx17_conformance"
+        "gdkmath_cxx20_conformance"
       ],
       "condition": {
         "type": "equals",
@@ -104,7 +113,7 @@
       "configurePreset": "linux-clang",
       "targets": [
         "gdkmath_test_0",
-        "gdkmath_cxx17_conformance"
+        "gdkmath_cxx20_conformance"
       ],
       "condition": {
         "type": "equals",
@@ -117,7 +126,7 @@
       "configurePreset": "macos-clang",
       "targets": [
         "gdkmath_test_0",
-        "gdkmath_cxx17_conformance"
+        "gdkmath_cxx20_conformance"
       ],
       "condition": {
         "type": "equals",
@@ -131,7 +140,7 @@
       "configuration": "Release",
       "targets": [
         "gdkmath_test_0",
-        "gdkmath_cxx17_conformance"
+        "gdkmath_cxx20_conformance"
       ],
       "condition": {
         "type": "equals",
@@ -144,6 +153,19 @@
       "configurePreset": "linux-gcc-bench",
       "targets": [
         "gdkmath_bench_std"
+      ],
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "linux-gcc-fast-transcendentals",
+      "configurePreset": "linux-gcc-fast-transcendentals",
+      "targets": [
+        "gdkmath_test_0",
+        "gdkmath_cxx20_conformance"
       ],
       "condition": {
         "type": "equals",
@@ -220,6 +242,23 @@
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
+      }
+    },
+    {
+      "name": "linux-gcc-fast-transcendentals",
+      "configurePreset": "linux-gcc-fast-transcendentals",
+      "filter": {
+        "include": {
+          "name": "gdkmath_test_0"
+        }
+      },
+      "output": {
+        "outputOnFailure": true
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
       }
     }
   ]

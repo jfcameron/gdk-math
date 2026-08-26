@@ -22,12 +22,18 @@ jfc_add_tests(
 
     INCLUDE_DIRECTORIES
         "${${PROJECT_NAME}_INCLUDE_DIRECTORIES}"
+
+    LIBRARIES
+        gdkmath
 )
 
 add_library(gdkmath_cxx20_conformance OBJECT "${CMAKE_CURRENT_LIST_DIR}/cxx20_conformance.cpp")
 
 target_include_directories(gdkmath_cxx20_conformance
     PRIVATE "${gdkmath_INCLUDE_DIRECTORIES}")
+
+target_compile_definitions(gdkmath_cxx20_conformance
+    PRIVATE GDK_MATH_FAST_TRANSCENDENTALS=${GDK_MATH_FAST_TRANSCENDENTALS_VALUE})
 
 set_target_properties(gdkmath_cxx20_conformance PROPERTIES
     CXX_STANDARD 20

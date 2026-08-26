@@ -166,6 +166,32 @@ namespace gdk {
         return (a * (static_cast<component_type>(1) - t) + adjusted * t).normalized();
     }
 
+#if GDK_MATH_FAST_TRANSCENDENTALS
+    namespace detail {
+        template<floating_point_component component_type>
+        component_type approximate_acos(const component_type x) {
+            return std::sqrt(static_cast<component_type>(1) - x) *
+                (static_cast<component_type>(1.5707288) +
+                    x * (static_cast<component_type>(-0.2121144) +
+                        x * (static_cast<component_type>(0.0742610) +
+                            x * static_cast<component_type>(-0.0187293))));
+        }
+
+        template<floating_point_component component_type>
+        component_type approximate_sin(const component_type x) {
+            const auto u = x - static_cast<component_type>(1.5707963267948966);
+            const auto uu = u * u;
+
+            return static_cast<component_type>(1) +
+                uu * (static_cast<component_type>(-0.5) +
+                    uu * (static_cast<component_type>(4.1666666666666664e-2) +
+                        uu * (static_cast<component_type>(-1.3888888888888889e-3) +
+                            uu * (static_cast<component_type>(2.4801587301587302e-5) +
+                                uu * static_cast<component_type>(-2.7557319223985893e-7)))));
+        }
+    }
+#endif
+
     template<floating_point_component component_type>
     quaternion<component_type> slerp(const quaternion<component_type> &a,
         const quaternion<component_type> &b, const component_type t) {
@@ -182,13 +208,21 @@ namespace gdk {
         if (cosTheta > LINEAR_THRESHOLD)
             return nlerp(a, adjusted, t);
 
+#if GDK_MATH_FAST_TRANSCENDENTALS
+        const auto theta = detail::approximate_acos(cosTheta);
+
+        return (a * detail::approximate_sin((static_cast<component_type>(1) - t) * theta) +
+            adjusted * detail::approximate_sin(t * theta)).normalized();
+#else
         const auto theta = std::acos(cosTheta);
-        const auto sinTheta = std::sin(theta);
+
+        const auto sinTheta = std::sqrt(static_cast<component_type>(1) - cosTheta * cosTheta);
 
         const auto scaleA = std::sin((static_cast<component_type>(1) - t) * theta) / sinTheta;
         const auto scaleB = std::sin(t * theta) / sinTheta;
 
         return a * scaleA + adjusted * scaleB;
+#endif
     }
 
     template<floating_point_component component_type>
