@@ -1,6 +1,10 @@
 # © Joseph Cameron - All Rights Reserved
 
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+
+project(gdkmath
+    VERSION 1.0
+    DESCRIPTION "game development kit math lib")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/jfc-cmake/jfclib.cmake")
 
@@ -11,14 +15,12 @@ option(JFC_BUILD_BENCH "Build the benchmark harness" OFF)
 set(GDK_MATH_BACKEND "std" CACHE STRING
     "gdk-math implementation to build against: a directory name under impl/")
 
-option(GDK_MATH_STRICT_FP
-    "Build gdk-math for reproducibility across machines rather than for speed" OFF)
+option(GDK_MATH_STRICT_FP "Build gdk-math for reproducibility across machines rather than for speed" OFF)
 
 option(GDK_MATH_FAST_TRANSCENDENTALS
     "Approximate acos and sin with polynomials where a bounded angular error is acceptable" OFF)
 
-option(GDK_MATH_SIMD
-    "Use SIMD kernels in the batch functions" ON)
+option(GDK_MATH_SIMD "Use SIMD kernels in the batch functions" ON)
 
 set(GDK_MATH_BACKEND_INCLUDE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/impl/${GDK_MATH_BACKEND}")
 
@@ -64,52 +66,94 @@ if (GDK_MATH_STRICT_FP)
     endforeach()
 endif()
 
-jfc_project(library
-    NAME "gdkmath"
-    VERSION 0.9
-    DESCRIPTION "game development kit math lib"
-    C++_STANDARD 20
-    C_STANDARD 90
-    TYPE INTERFACE
+if (NOT TARGET gdkmath)
+    add_library(gdkmath INTERFACE)
 
-    PUBLIC_INCLUDE_DIRECTORIES
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${GDK_MATH_BACKEND_INCLUDE_DIRECTORY}
-        
+    add_library(gdk::math ALIAS gdkmath)
+
+    set_target_properties(gdkmath PROPERTIES EXPORT_NAME math)
+
+    jfc_generate_cmake_header()
+
+    target_include_directories(gdkmath INTERFACE
+        "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/generated_include>"
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+
+        "$<BUILD_INTERFACE:${GDK_MATH_BACKEND_INCLUDE_DIRECTORY}>"
+        "$<INSTALL_INTERFACE:include>")
+
+    target_compile_features(gdkmath INTERFACE cxx_std_20)
+
+    if (GDK_MATH_STRICT_FP)
+        foreach (_gdk_math_fp_flag ${GDK_MATH_FP_FLAGS})
+            target_compile_options(gdkmath INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${_gdk_math_fp_flag}>)
+        endforeach()
+    endif()
+
+    if (GDK_MATH_STRICT_FP)
+        set(GDK_MATH_STRICT_FP_VALUE 1)
+    else()
+        set(GDK_MATH_STRICT_FP_VALUE 0)
+    endif()
+
+    if (GDK_MATH_FAST_TRANSCENDENTALS)
+        set(GDK_MATH_FAST_TRANSCENDENTALS_VALUE 1)
+    else()
+        set(GDK_MATH_FAST_TRANSCENDENTALS_VALUE 0)
+    endif()
+
+    if (GDK_MATH_SIMD)
+        set(GDK_MATH_SIMD_VALUE 1)
+    else()
+        set(GDK_MATH_SIMD_VALUE 0)
+    endif()
+
+    target_compile_definitions(gdkmath
+        INTERFACE
+            GDK_MATH_FAST_TRANSCENDENTALS=${GDK_MATH_FAST_TRANSCENDENTALS_VALUE}
+            GDK_MATH_SIMD=${GDK_MATH_SIMD_VALUE})
+
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/math_config.h.in"
+        "${PROJECT_BINARY_DIR}/generated_include/gdk/math_config.h" @ONLY)
+
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
+
+    install(TARGETS gdkmath EXPORT gdkmath-targets)
+
+    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
+    install(DIRECTORY "${GDK_MATH_BACKEND_INCLUDE_DIRECTORY}/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
+    install(FILES "${PROJECT_BINARY_DIR}/generated_include/gdk/math_config.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/gdk")
+
+    install(EXPORT gdkmath-targets
+        FILE gdkmath-targets.cmake
+        NAMESPACE gdk::
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/gdkmath")
+endif()
+
+write_basic_package_version_file(
+    "${PROJECT_BINARY_DIR}/gdkmath-config-version.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+file(WRITE 
+    "${PROJECT_BINARY_DIR}/gdkmath-config.cmake"
+    "include(\"\${CMAKE_CURRENT_LIST_DIR}/gdkmath-targets.cmake\")"
 )
 
-if (GDK_MATH_STRICT_FP)
-    foreach (_gdk_math_fp_flag ${GDK_MATH_FP_FLAGS})
-        target_compile_options(gdkmath INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${_gdk_math_fp_flag}>)
-    endforeach()
-endif()
-
-if (GDK_MATH_STRICT_FP)
-    set(GDK_MATH_STRICT_FP_VALUE 1)
-else()
-    set(GDK_MATH_STRICT_FP_VALUE 0)
-endif()
-
-if (GDK_MATH_FAST_TRANSCENDENTALS)
-    set(GDK_MATH_FAST_TRANSCENDENTALS_VALUE 1)
-else()
-    set(GDK_MATH_FAST_TRANSCENDENTALS_VALUE 0)
-endif()
-
-if (GDK_MATH_SIMD)
-    set(GDK_MATH_SIMD_VALUE 1)
-else()
-    set(GDK_MATH_SIMD_VALUE 0)
-endif()
-
-target_compile_definitions(gdkmath
-    INTERFACE
-        GDK_MATH_FAST_TRANSCENDENTALS=${GDK_MATH_FAST_TRANSCENDENTALS_VALUE}
-        GDK_MATH_SIMD=${GDK_MATH_SIMD_VALUE})
-
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/math_config.h.in"
-    "${PROJECT_BINARY_DIR}/generated_include/gdk/math_config.h" @ONLY)
+install(
+    FILES
+        "${PROJECT_BINARY_DIR}/gdkmath-config.cmake"
+        "${PROJECT_BINARY_DIR}/gdkmath-config-version.cmake"
+    DESTINATION 
+        "${CMAKE_INSTALL_LIBDIR}/cmake/gdkmath"
+)
 
 if (JFC_BUILD_TESTS)
     add_subdirectory(test)

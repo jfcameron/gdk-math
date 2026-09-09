@@ -20,17 +20,13 @@ jfc_add_tests(
         "${CMAKE_CURRENT_LIST_DIR}/vector4_test.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/vector_parity_test.cpp"
 
-    INCLUDE_DIRECTORIES
-        "${${PROJECT_NAME}_INCLUDE_DIRECTORIES}"
-
     LIBRARIES
         gdkmath
 )
 
 add_library(gdkmath_cxx20_conformance OBJECT "${CMAKE_CURRENT_LIST_DIR}/cxx20_conformance.cpp")
 
-target_include_directories(gdkmath_cxx20_conformance
-    PRIVATE "${gdkmath_INCLUDE_DIRECTORIES}")
+target_link_libraries(gdkmath_cxx20_conformance PRIVATE gdkmath)
 
 target_compile_definitions(gdkmath_cxx20_conformance
     PRIVATE
