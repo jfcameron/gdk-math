@@ -73,7 +73,7 @@ if (NOT TARGET gdkmath)
 
     set_target_properties(gdkmath PROPERTIES EXPORT_NAME math)
 
-    jfc_generate_cmake_header()
+    jfc_generate_build_info()
 
     target_include_directories(gdkmath INTERFACE
         "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/generated_include>"
