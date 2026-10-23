@@ -1,5 +1,5 @@
 # gdk-math
-math library for 3d games/
+math library for 3d games
 
 ## Getting Started
 Install cmake 3.21 or greater, and a c++20 compatible compiler 
