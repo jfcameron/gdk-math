@@ -1,15 +1,15 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
-#ifndef GDK_MATH_MAT4X4_H
-#define GDK_MATH_MAT4X4_H
+#ifndef GDK_MATH_MATRIX4X4_H
+#define GDK_MATH_MATRIX4X4_H
 
-#include <gdk/math_concepts.h>
-#include <gdk/storage.inl> // varies by implementation 
+#include <gdk/math/concepts.h>
+#include <gdk/math/storage.inl> // varies by implementation 
 
-#include <gdk/quaternion.h>
-#include <gdk/vector2.h>
-#include <gdk/vector3.h>
-#include <gdk/vector4.h>
+#include <gdk/math/quaternion.h>
+#include <gdk/math/vector2.h>
+#include <gdk/math/vector3.h>
+#include <gdk/math/vector4.h>
 
 #include <array>
 #include <cstddef>
@@ -19,8 +19,8 @@
 #include <iosfwd>
 #include <type_traits>
 
-namespace gdk {
-    /// \brief 4 by 4 matrix used to calculate 3D transformations and camera projections.
+namespace gdk::math {
+    /// \brief 4 by 4 matrix used to calculate 3D transformations.
     /// - **right-handed**: +X right, +Y up, +Z back
     /// - **column-major**: data layout is column first 
     /// - **Storage order is part of the interface, it does not vary with implementations.** 
@@ -47,9 +47,10 @@ namespace gdk {
         [[nodiscard]] constexpr component_type basis_determinant() const;
 
     public:
-        //! write one element. **Column first, row second.**
+        //! write one element. **Column first, row second.** Unchecked: each must be less than order.
         constexpr void set(const order_type aX, const order_type aY, const component_type aValue);
 
+        //! one element, column first, row second. Unchecked: each must be less than order.
         constexpr component_type &get(const order_type aX, const order_type aY);
         [[nodiscard]] constexpr const component_type &get(const order_type aX, const order_type aY) const;
 
@@ -65,7 +66,7 @@ namespace gdk {
         //! get the translation vector from this matrix
         [[nodiscard]] constexpr vector3_type translation() const;
 
-        //! get the rotation as a quaternion. 
+        //! get the rotation as a quaternion. Throws std::domain_error for a mirrored transform, or two zero scale axes.
         [[nodiscard]] quaternion_type rotation() const;
 
         //! set the rotation component directly (rotation and scale use the same components of a 4x4 matrix)
@@ -74,7 +75,7 @@ namespace gdk {
         //! sets the rotation while preserving scaling
         void set_rotation(const quaternion_type &aRotation);
 
-        //! sets the scale while preserving rotation
+        //! sets the scale while preserving rotation. Throws std::domain_error where rotation() would.
         void set_scale(const vector3_type &aScale);
 
         //! transpose the matrix in place
@@ -92,8 +93,8 @@ namespace gdk {
         //! get the inverse, leaving this one alone
         [[nodiscard]] constexpr matrix4x4<component_type> inversed() const;
 
-        //! set this matrix to its inverse via a faster means but requires that the matrix is affine,
-        /// meaning the matrix must only contain translations, rotations and scales.
+        //! the inverse of a translation, rotation and per-axis scale, faster than inverse(); no shear or projection.
+        /// Throws std::domain_error for a zero scale axis.
         constexpr void inverse_affine();
 
         //! assign values to all 16 elements of the matrix
@@ -138,6 +139,6 @@ namespace gdk {
     };
 }
 
-#include <gdk/matrix4x4.inl> // varies by implementation 
+#include <gdk/math/matrix4x4.inl> // varies by implementation 
 
 #endif

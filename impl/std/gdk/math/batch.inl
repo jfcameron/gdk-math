@@ -1,7 +1,7 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
-#ifndef GDK_MATH_IMPL_STD_MATH_BATCH_INL
-#define GDK_MATH_IMPL_STD_MATH_BATCH_INL
+#ifndef GDK_MATH_IMPL_STD_BATCH_INL
+#define GDK_MATH_IMPL_STD_BATCH_INL
 
 #include <cstddef>
 #include <stdexcept>
@@ -9,9 +9,11 @@
 
 #if GDK_MATH_BATCH_SSE2
 #include <emmintrin.h>
+#elif GDK_MATH_BATCH_NEON
+#include <arm_neon.h>
 #endif
 
-namespace gdk {
+namespace gdk::math {
     namespace math_batch_detail {
         inline void require_room(const std::size_t aSourceSize, const std::size_t aDestinationSize) {
             if (aDestinationSize < aSourceSize)
@@ -58,7 +60,7 @@ namespace gdk {
 
 #if GDK_MATH_BATCH_SSE2
         template<bool translate>
-        void affine_batch_sse2(const affine_rows<float> &aRows, const vector3<float> *aSource,
+        void affine_batch_simd(const affine_rows<float> &aRows, const vector3<float> *aSource,
             vector3<float> *aDestination, const std::size_t aCount) {
             const auto *const c = aRows.c;
 
@@ -102,7 +104,7 @@ namespace gdk {
             return _mm_or_ps(_mm_and_ps(aMask, aWhenSet), _mm_andnot_ps(aMask, aWhenClear));
         }
 
-        inline void project_batch_sse2(const matrix4x4<float> &aTransform,
+        inline void project_batch_simd(const matrix4x4<float> &aTransform,
             const vector3<float> *aSource, vector3<float> *aDestination, const std::size_t aCount) {
             const __m128 x0 = _mm_set1_ps(aTransform.get(0, 0)), x1 = _mm_set1_ps(aTransform.get(1, 0));
             const __m128 x2 = _mm_set1_ps(aTransform.get(2, 0)), x3 = _mm_set1_ps(aTransform.get(3, 0));
@@ -142,7 +144,7 @@ namespace gdk {
             for (; i < aCount; ++i) aDestination[i] = aTransform * aSource[i];
         }
 
-        inline void rotate_batch_sse2(const quaternion<float> &aRotation,
+        inline void rotate_batch_simd(const quaternion<float> &aRotation,
             const vector3<float> *aSource, vector3<float> *aDestination, const std::size_t aCount) {
             const __m128 ax = _mm_set1_ps(aRotation.x), ay = _mm_set1_ps(aRotation.y);
             const __m128 az = _mm_set1_ps(aRotation.z), aw = _mm_set1_ps(aRotation.w);
@@ -176,7 +178,127 @@ namespace gdk {
 
             for (; i < aCount; ++i) aDestination[i] = aRotation * aSource[i];
         }
+#elif GDK_MATH_BATCH_NEON
+        template<bool translate>
+        void affine_batch_simd(const affine_rows<float> &aRows, const vector3<float> *aSource,
+            vector3<float> *aDestination, const std::size_t aCount) {
+            const auto *const c = aRows.c;
+
+            const float32x4_t x0 = vdupq_n_f32(c[0]), x1 = vdupq_n_f32(c[1]), x2 = vdupq_n_f32(c[2]);
+            const float32x4_t y0 = vdupq_n_f32(c[4]), y1 = vdupq_n_f32(c[5]), y2 = vdupq_n_f32(c[6]);
+            const float32x4_t z0 = vdupq_n_f32(c[8]), z1 = vdupq_n_f32(c[9]), z2 = vdupq_n_f32(c[10]);
+            const float32x4_t tx = vdupq_n_f32(c[3]), ty = vdupq_n_f32(c[7]), tz = vdupq_n_f32(c[11]);
+
+            std::size_t i = 0;
+
+            for (; i + 4 <= aCount; i += 4) {
+                const float32x4x3_t p = vld3q_f32(&aSource[i].x);
+
+                float32x4x3_t r;
+
+                if constexpr (translate) {
+                    r.val[0] = x0 * p.val[0] + x1 * p.val[1] + x2 * p.val[2] + tx;
+                    r.val[1] = y0 * p.val[0] + y1 * p.val[1] + y2 * p.val[2] + ty;
+                    r.val[2] = z0 * p.val[0] + z1 * p.val[1] + z2 * p.val[2] + tz;
+                } else {
+                    r.val[0] = x0 * p.val[0] + x1 * p.val[1] + x2 * p.val[2];
+                    r.val[1] = y0 * p.val[0] + y1 * p.val[1] + y2 * p.val[2];
+                    r.val[2] = z0 * p.val[0] + z1 * p.val[1] + z2 * p.val[2];
+                }
+
+                vst3q_f32(&aDestination[i].x, r);
+            }
+
+            affine_batch_scalar<translate>(aRows, aSource + i, aDestination + i, aCount - i);
+        }
+
+        inline void project_batch_simd(const matrix4x4<float> &aTransform,
+            const vector3<float> *aSource, vector3<float> *aDestination, const std::size_t aCount) {
+            const float32x4_t x0 = vdupq_n_f32(aTransform.get(0, 0)), x1 = vdupq_n_f32(aTransform.get(1, 0));
+            const float32x4_t x2 = vdupq_n_f32(aTransform.get(2, 0)), x3 = vdupq_n_f32(aTransform.get(3, 0));
+            const float32x4_t y0 = vdupq_n_f32(aTransform.get(0, 1)), y1 = vdupq_n_f32(aTransform.get(1, 1));
+            const float32x4_t y2 = vdupq_n_f32(aTransform.get(2, 1)), y3 = vdupq_n_f32(aTransform.get(3, 1));
+            const float32x4_t z0 = vdupq_n_f32(aTransform.get(0, 2)), z1 = vdupq_n_f32(aTransform.get(1, 2));
+            const float32x4_t z2 = vdupq_n_f32(aTransform.get(2, 2)), z3 = vdupq_n_f32(aTransform.get(3, 2));
+            const float32x4_t w0 = vdupq_n_f32(aTransform.get(0, 3)), w1 = vdupq_n_f32(aTransform.get(1, 3));
+            const float32x4_t w2 = vdupq_n_f32(aTransform.get(2, 3)), w3 = vdupq_n_f32(aTransform.get(3, 3));
+
+            const float32x4_t zero = vdupq_n_f32(0.0f), one = vdupq_n_f32(1.0f);
+
+            std::size_t i = 0;
+
+            for (; i + 4 <= aCount; i += 4) {
+                const float32x4x3_t p = vld3q_f32(&aSource[i].x);
+
+                const float32x4_t rx = x0 * p.val[0] + x1 * p.val[1] + x2 * p.val[2] + x3 * one;
+                const float32x4_t ry = y0 * p.val[0] + y1 * p.val[1] + y2 * p.val[2] + y3 * one;
+                const float32x4_t rz = z0 * p.val[0] + z1 * p.val[1] + z2 * p.val[2] + z3 * one;
+                const float32x4_t rw = w0 * p.val[0] + w1 * p.val[1] + w2 * p.val[2] + w3 * one;
+
+                const uint32x4_t degenerate = vceqq_f32(rw, zero);
+                const float32x4_t divisor = vbslq_f32(degenerate, one, rw);
+
+                float32x4x3_t r;
+                r.val[0] = vbslq_f32(degenerate, rx, rx / divisor);
+                r.val[1] = vbslq_f32(degenerate, ry, ry / divisor);
+                r.val[2] = vbslq_f32(degenerate, rz, rz / divisor);
+
+                vst3q_f32(&aDestination[i].x, r);
+            }
+
+            for (; i < aCount; ++i) aDestination[i] = aTransform * aSource[i];
+        }
+
+        inline void rotate_batch_simd(const quaternion<float> &aRotation,
+            const vector3<float> *aSource, vector3<float> *aDestination, const std::size_t aCount) {
+            const float32x4_t ax = vdupq_n_f32(aRotation.x), ay = vdupq_n_f32(aRotation.y);
+            const float32x4_t az = vdupq_n_f32(aRotation.z), aw = vdupq_n_f32(aRotation.w);
+            const float32x4_t two = vdupq_n_f32(2.0f);
+
+            std::size_t i = 0;
+
+            for (; i + 4 <= aCount; i += 4) {
+                const float32x4x3_t v = vld3q_f32(&aSource[i].x);
+
+                const float32x4_t cx = ay * v.val[2] - az * v.val[1];
+                const float32x4_t cy = az * v.val[0] - ax * v.val[2];
+                const float32x4_t cz = ax * v.val[1] - ay * v.val[0];
+
+                const float32x4_t tx = cx * two, ty = cy * two, tz = cz * two;
+
+                const float32x4_t wx = tx * aw, wy = ty * aw, wz = tz * aw;
+
+                const float32x4_t sx = v.val[0] + wx, sy = v.val[1] + wy, sz = v.val[2] + wz;
+
+                const float32x4_t ux = ay * tz - az * ty;
+                const float32x4_t uy = az * tx - ax * tz;
+                const float32x4_t uz = ax * ty - ay * tx;
+
+                float32x4x3_t r;
+                r.val[0] = sx + ux;
+                r.val[1] = sy + uy;
+                r.val[2] = sz + uz;
+
+                vst3q_f32(&aDestination[i].x, r);
+            }
+
+            for (; i < aCount; ++i) aDestination[i] = aRotation * aSource[i];
+        }
 #endif
+
+        template<typename component_type>
+        void project_batch_scalar(const matrix4x4<component_type> &aTransform,
+            const vector3<component_type> *aSource, vector3<component_type> *aDestination,
+            const std::size_t aCount) {
+            for (std::size_t i = 0; i < aCount; ++i) aDestination[i] = aTransform * aSource[i];
+        }
+
+        template<typename component_type>
+        void rotate_batch_scalar(const quaternion<component_type> &aRotation,
+            const vector3<component_type> *aSource, vector3<component_type> *aDestination,
+            const std::size_t aCount) {
+            for (std::size_t i = 0; i < aCount; ++i) aDestination[i] = aRotation * aSource[i];
+        }
 
         //! picks the kernel: SIMD where the target has it and the component type is the one it
         //! is written for, the plain loop everywhere else
@@ -184,9 +306,9 @@ namespace gdk {
         void affine_batch(const affine_rows<component_type> &aRows,
             const vector3<component_type> *aSource, vector3<component_type> *aDestination,
             const std::size_t aCount) {
-#if GDK_MATH_BATCH_SSE2
+#if GDK_MATH_BATCH_SIMD
             if constexpr (std::is_same_v<component_type, float>)
-                affine_batch_sse2<translate>(aRows, aSource, aDestination, aCount);
+                affine_batch_simd<translate>(aRows, aSource, aDestination, aCount);
             else
                 affine_batch_scalar<translate>(aRows, aSource, aDestination, aCount);
 #else
@@ -215,15 +337,17 @@ namespace gdk {
         batch_source<component_type> aSource, batch_destination<component_type> aDestination) {
         math_batch_detail::require_room(aSource.size(), aDestination.size());
 
-#if GDK_MATH_BATCH_SSE2
-        if constexpr (std::is_same_v<component_type, float>) {
-            math_batch_detail::project_batch_sse2(aTransform, aSource.data(), aDestination.data(),
+#if GDK_MATH_BATCH_SIMD
+        if constexpr (std::is_same_v<component_type, float>)
+            math_batch_detail::project_batch_simd(aTransform, aSource.data(), aDestination.data(),
                 aSource.size());
-
-            return;
-        }
+        else
+            math_batch_detail::project_batch_scalar(aTransform, aSource.data(), aDestination.data(),
+                aSource.size());
+#else
+        math_batch_detail::project_batch_scalar(aTransform, aSource.data(), aDestination.data(),
+            aSource.size());
 #endif
-        for (std::size_t i = 0; i < aSource.size(); ++i) aDestination[i] = aTransform * aSource[i];
     }
 
     template<floating_point_component component_type>
@@ -249,15 +373,17 @@ namespace gdk {
         batch_source<component_type> aSource, batch_destination<component_type> aDestination) {
         math_batch_detail::require_room(aSource.size(), aDestination.size());
 
-#if GDK_MATH_BATCH_SSE2
-        if constexpr (std::is_same_v<component_type, float>) {
-            math_batch_detail::rotate_batch_sse2(aRotation, aSource.data(), aDestination.data(),
+#if GDK_MATH_BATCH_SIMD
+        if constexpr (std::is_same_v<component_type, float>)
+            math_batch_detail::rotate_batch_simd(aRotation, aSource.data(), aDestination.data(),
                 aSource.size());
-
-            return;
-        }
+        else
+            math_batch_detail::rotate_batch_scalar(aRotation, aSource.data(), aDestination.data(),
+                aSource.size());
+#else
+        math_batch_detail::rotate_batch_scalar(aRotation, aSource.data(), aDestination.data(),
+            aSource.size());
 #endif
-        for (std::size_t i = 0; i < aSource.size(); ++i) aDestination[i] = aRotation * aSource[i];
     }
 }
 

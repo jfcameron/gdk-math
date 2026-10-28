@@ -1,15 +1,17 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
-#include <gdk/vector2.h>
-#include <gdk/vector3.h>
-#include <gdk/vector4.h>
+#include <gdk/math/vector2.h>
+#include <gdk/math/vector3.h>
+#include <gdk/math/vector4.h>
 
 #include <cmath>
 
-using namespace gdk;
+using namespace gdk::math;
 
 TEMPLATE_LIST_TEST_CASE("vector2 constructors and constants", "[vector2]", type::floating_point)
 {

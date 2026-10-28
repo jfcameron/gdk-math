@@ -1,9 +1,9 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_IMPL_STD_MATRIX4X4_INL
 #define GDK_MATH_IMPL_STD_MATRIX4X4_INL
 
-namespace gdk {
+namespace gdk::math {
     template<floating_point_component component_type>
     constexpr std::size_t matrix4x4<component_type>::index(order_type aX, order_type aY) const {
         return aX * order + aY;
@@ -63,18 +63,32 @@ namespace gdk {
             "matrix4x4::rotation() on a mirrored transform: no rotation describes a negative "
             "determinant, and scale() cannot carry the sign to put it back");
 
-        vector3_type scale = this->scale();
-        std::array<component_type *, 3> scaleAsArray { &scale.x, &scale.y, &scale.z };
+        const vector3_type scale = this->scale();
 
-        matrix4x4<component_type> normalizedMatrix = *this;
-        for (order_type i{0}; i < 3; ++i) {
-            for (order_type j{0}; j < 3; ++j) {
-                normalizedMatrix.get(i, j) /= *scaleAsArray[i];
+        std::array<vector3_type, 3> axes{};
+        std::size_t zeroAxes = 0;
+
+        for (order_type column = 0; column < 3; ++column) {
+            const auto length = scale[column];
+
+            if (length == 0) {
+                ++zeroAxes;
+
+                continue;
             }
+
+            axes[column] = {get(column, 0) / length, get(column, 1) / length, get(column, 2) / length};
         }
 
-        const auto r = [&normalizedMatrix](const order_type aRow, const order_type aColumn) {
-            return normalizedMatrix.get(aColumn, aRow);
+        if (zeroAxes > 1) throw std::domain_error(
+            "matrix4x4::rotation() with two or more zero scale axes: no single rotation describes it");
+
+        for (order_type column = 0; column < 3; ++column)
+            if (scale[column] == 0)
+                axes[column] = axes[(column + 1) % 3].cross_product(axes[(column + 2) % 3]);
+
+        const auto r = [&axes](const order_type aRow, const order_type aColumn) {
+            return axes[aColumn][aRow];
         };
 
         const auto one = static_cast<component_type>(1);
@@ -283,33 +297,32 @@ namespace gdk {
     }
 
     template<floating_point_component component_type>
-    constexpr void matrix4x4<component_type>::inverse_affine() { 
-        component_type rot[3][3] = {
-            { get(0, 0), get(0, 1), get(0, 2) },
-            { get(1, 0), get(1, 1), get(1, 2) },
-            { get(2, 0), get(2, 1), get(2, 2) }
-        };
+    constexpr void matrix4x4<component_type>::inverse_affine() {
+        component_type inverseLengthsSquared[3] = {};
 
-        component_type trans[3] = { get(3, 0), get(3, 1), get(3, 2) };
+        for (order_type column = 0; column < 3; ++column) {
+            const auto lengthSquared = get(column, 0) * get(column, 0) + get(column, 1) * get(column, 1)
+                + get(column, 2) * get(column, 2);
 
-        component_type rotInv[3][3] = {
-            { rot[0][0], rot[1][0], rot[2][0] },
-            { rot[0][1], rot[1][1], rot[2][1] },
-            { rot[0][2], rot[1][2], rot[2][2] }
-        };
+            if (lengthSquared == 0) throw std::domain_error(
+                "matrix4x4::inverse_affine() on a transform with a zero scale axis: it has no inverse");
 
-        component_type transInv[3] = {
-            -(rotInv[0][0] * trans[0] + rotInv[0][1] * trans[1] + rotInv[0][2] * trans[2]),
-            -(rotInv[1][0] * trans[0] + rotInv[1][1] * trans[1] + rotInv[1][2] * trans[2]),
-            -(rotInv[2][0] * trans[0] + rotInv[2][1] * trans[1] + rotInv[2][2] * trans[2])
-        };
+            inverseLengthsSquared[column] = component_type(1) / lengthSquared;
+        }
 
-        set(
-            rotInv[0][0], rotInv[0][1], rotInv[0][2], 0.0,
-            rotInv[1][0], rotInv[1][1], rotInv[1][2], 0.0,
-            rotInv[2][0], rotInv[2][1], rotInv[2][2], 0.0,
-             transInv[0],  transInv[1],  transInv[2], 1.0
-        );
+        const vector3_type t = translation();
+
+        matrix4x4<component_type> result;
+
+        for (order_type row = 0; row < 3; ++row) {
+            for (order_type column = 0; column < 3; ++column)
+                result.set(column, row, get(row, column) * inverseLengthsSquared[row]);
+
+            result.set(3, row, -(get(row, 0) * t.x + get(row, 1) * t.y + get(row, 2) * t.z)
+                * inverseLengthsSquared[row]);
+        }
+
+        *this = result;
     }
 
     template<floating_point_component component_type>

@@ -1,17 +1,26 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
 
-using namespace gdk;
+#include <limits>
+
+using namespace gdk::math;
 
 namespace {
     template<typename T>
+    constexpr bool IS_DOUBLE_DOUBLE = std::numeric_limits<T>::digits == 106;
+
+    template<typename T>
     constexpr bool scalar_checks() {
-        static_assert(to_radians(T(180)) > T(3.14159), "to_radians");
-        static_assert(to_degrees(static_cast<T>(numbers::pi)) > T(179.99), "to_degrees");
+        if constexpr (!IS_DOUBLE_DOUBLE<T>) {
+            static_assert(to_radians(T(180)) > T(3.14159), "to_radians");
+            static_assert(to_degrees(static_cast<T>(numbers::pi)) > T(179.99), "to_degrees");
+        }
 
         return true;
     }

@@ -1,17 +1,34 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
 
 #include <array>
+#include <cfloat>
+#include <cstddef>
 #include <stdexcept>
 #include <vector>
 
-using namespace gdk;
+using namespace gdk::math;
 
 namespace {
+    constexpr bool EVALUATES_AT_ITS_OWN_PRECISION = FLT_EVAL_METHOD == 0;
+
+    template<typename T>
+    void require_matches(const vector3<T> &aBatch, const vector3<T> &aSingle) {
+        if constexpr (EVALUATES_AT_ITS_OWN_PRECISION) {
+            REQUIRE(aBatch == aSingle);
+        } else {
+            REQUIRE(aBatch.x == Approx(aSingle.x));
+            REQUIRE(aBatch.y == Approx(aSingle.y));
+            REQUIRE(aBatch.z == Approx(aSingle.z));
+        }
+    }
+
     //! an affine transform: rotation, scale and translation, but no perspective row
     template<typename T>
     [[nodiscard]] matrix4x4<T> affine() {
@@ -51,14 +68,14 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: results match the single-operand operat
     {
         project_points(m, points, out);
 
-        for (std::size_t i = 0; i < points.size(); ++i) REQUIRE(out[i] == m * points[i]);
+        for (std::size_t i = 0; i < points.size(); ++i) require_matches(out[i], m * points[i]);
     }
 
     SECTION("transform_points matches operator* for an affine transform")
     {
         transform_points(m, points, out);
 
-        for (std::size_t i = 0; i < points.size(); ++i) REQUIRE(out[i] == m * points[i]);
+        for (std::size_t i = 0; i < points.size(); ++i) require_matches(out[i], m * points[i]);
     }
 
     SECTION("transform_directions matches the hoisted 3x3")
@@ -67,7 +84,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: results match the single-operand operat
 
         transform_directions(m, points, out);
 
-        for (std::size_t i = 0; i < points.size(); ++i) REQUIRE(out[i] == linear * points[i]);
+        for (std::size_t i = 0; i < points.size(); ++i) require_matches(out[i], linear * points[i]);
     }
 
     SECTION("transform_directions ignores translation, which points do not")
@@ -88,7 +105,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: results match the single-operand operat
 
         transform_normals(m, points, out);
 
-        for (std::size_t i = 0; i < points.size(); ++i) REQUIRE(out[i] == normals * points[i]);
+        for (std::size_t i = 0; i < points.size(); ++i) require_matches(out[i], normals * points[i]);
     }
 
     SECTION("rotate_directions matches quaternion multiplication")
@@ -97,7 +114,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: results match the single-operand operat
 
         rotate_directions(q, points, out);
 
-        for (std::size_t i = 0; i < points.size(); ++i) REQUIRE(out[i] == q * points[i]);
+        for (std::size_t i = 0; i < points.size(); ++i) require_matches(out[i], q * points[i]);
     }
 }
 
@@ -115,7 +132,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: the SIMD kernel agrees with the scalar 
     SECTION("**every batch length matches operator* exactly, tail included**")
     {
         for (std::size_t n = 0; n <= points.size(); ++n) {
-            const auto source = std::vector<vector3<T>>(points.begin(), points.begin() + n);
+            const auto source = std::vector<vector3<T>>(points.begin(), points.begin() + static_cast<std::ptrdiff_t>(n));
 
             std::vector<vector3<T>> transformed(n), directions(n), normals(n), projected(n), rotated(n);
 
@@ -138,11 +155,11 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: the SIMD kernel agrees with the scalar 
             for (std::size_t i = 0; i < n; ++i) {
                 INFO("length " << n << ", element " << i);
 
-                REQUIRE(transformed[i] == m * source[i]);
-                REQUIRE(directions[i] == linear * source[i]);
-                REQUIRE(normals[i] == normalMatrix * source[i]);
-                REQUIRE(projected[i] == perspective * source[i]);
-                REQUIRE(rotated[i] == rotation * source[i]);
+                require_matches(transformed[i], m * source[i]);
+                require_matches(directions[i], linear * source[i]);
+                require_matches(normals[i], normalMatrix * source[i]);
+                require_matches(projected[i], perspective * source[i]);
+                require_matches(rotated[i], rotation * source[i]);
             }
         }
     }
@@ -156,7 +173,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: the SIMD kernel agrees with the scalar 
         degenerate.set(3, 3, T(0));
 
         for (std::size_t n = 1; n <= 9; ++n) {
-            const auto source = std::vector<vector3<T>>(points.begin(), points.begin() + n);
+            const auto source = std::vector<vector3<T>>(points.begin(), points.begin() + static_cast<std::ptrdiff_t>(n));
 
             std::vector<vector3<T>> out(n);
 
@@ -164,7 +181,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: the SIMD kernel agrees with the scalar 
 
             for (std::size_t i = 0; i < n; ++i) {
                 INFO("length " << n << ", element " << i);
-                REQUIRE(out[i] == degenerate * source[i]);
+                require_matches(out[i], degenerate * source[i]);
             }
         }
     }
@@ -172,7 +189,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: the SIMD kernel agrees with the scalar 
     SECTION("in place matches out of place at every length")
     {
         for (std::size_t n = 0; n <= points.size(); ++n) {
-            std::vector<vector3<T>> inPlace(points.begin(), points.begin() + n);
+            std::vector<vector3<T>> inPlace(points.begin(), points.begin() + static_cast<std::ptrdiff_t>(n));
             std::vector<vector3<T>> outOfPlace(n);
 
             transform_points(m, inPlace, outOfPlace);
@@ -188,7 +205,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math batch: the SIMD kernel agrees with the scalar 
         const auto sentinel = vector3<T>{T(-999), T(-999), T(-999)};
 
         for (std::size_t n = 1; n <= 9; ++n) {
-            const auto source = std::vector<vector3<T>>(points.begin(), points.begin() + n);
+            const auto source = std::vector<vector3<T>>(points.begin(), points.begin() + static_cast<std::ptrdiff_t>(n));
 
             std::vector<vector3<T>> destination(n + 3, sentinel);
 

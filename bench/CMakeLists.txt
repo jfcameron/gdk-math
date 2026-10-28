@@ -1,36 +1,14 @@
-# © Joseph Cameron - All Rights Reserved
+# © Joseph Cameron - MIT License
 
-# TODO: bench currently does not support MSVC, should fix that
-if (MSVC)
-    message(STATUS "gdk-math: JFC_BUILD_BENCH is ON, but the bench needs gcc/clang extended asm. Skipping.")
+add_executable(gdkmath_bench "${CMAKE_CURRENT_LIST_DIR}/bench.cpp")
 
-    return()
-endif()
+target_link_libraries(gdkmath_bench PRIVATE gdkmath)
 
-file(GLOB GDK_MATH_BACKEND_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/../impl/*")
+target_compile_definitions(gdkmath_bench PRIVATE GDK_MATH_BENCH_BACKEND="${GDK_MATH_BACKEND}")
 
-foreach(GDK_MATH_BACKEND_PATH ${GDK_MATH_BACKEND_PATHS})
-    if (NOT IS_DIRECTORY "${GDK_MATH_BACKEND_PATH}")
-        continue()
-    endif()
+set_target_properties(gdkmath_bench PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF)
 
-    get_filename_component(GDK_MATH_BACKEND "${GDK_MATH_BACKEND_PATH}" NAME)
-
-    set(GDK_MATH_BENCH_TARGET "gdkmath_bench_${GDK_MATH_BACKEND}")
-
-    add_executable(${GDK_MATH_BENCH_TARGET} "${CMAKE_CURRENT_LIST_DIR}/bench.cpp")
-
-    target_include_directories(${GDK_MATH_BENCH_TARGET} PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/../include"
-        "${GDK_MATH_BACKEND_PATH}")
-
-    target_compile_definitions(${GDK_MATH_BENCH_TARGET} PRIVATE
-        GDK_MATH_BENCH_BACKEND="${GDK_MATH_BACKEND}")
-
-    set_target_properties(${GDK_MATH_BENCH_TARGET} PROPERTIES
-        CXX_STANDARD 20
-        CXX_STANDARD_REQUIRED ON
-        CXX_EXTENSIONS OFF)
-
-    target_compile_options(${GDK_MATH_BENCH_TARGET} PRIVATE -O2)
-endforeach()
+target_compile_options(gdkmath_bench PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>,/O2,-O2>)

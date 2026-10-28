@@ -1,14 +1,16 @@
-// © 2018 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
-#include <gdk/quaternion.h>
-#include <gdk/vector3.h>
+#include <gdk/math/quaternion.h>
+#include <gdk/math/vector3.h>
 
 #include <cmath>
 
-using namespace gdk;
+using namespace gdk::math;
 
 namespace {
     template<typename T>
@@ -72,7 +74,7 @@ TEMPLATE_LIST_TEST_CASE("quaternion constructors", "[quaternion]", type::floatin
     SECTION("rotation about an axis matches the right-hand rule")
     {
         quat q;
-        q.set_from_euler({0, 0, QUARTER_TURN});
+        q.set_from_euler({0, 0, static_cast<TestType>(QUARTER_TURN)});
 
         const auto turnedX = turn_by(q, vec{1, 0, 0});
         REQUIRE(turnedX.x == Approx(0.0f).margin(1e-5));
@@ -88,7 +90,6 @@ TEMPLATE_LIST_TEST_CASE("quaternion normalisation", "[quaternion]", type::floati
 {
     using component_type = TestType;
     using quat = quaternion<component_type>;
-    using vec = vector3<component_type>;
 
     SECTION("normalized returns unit length and preserves the rotation")
     {
@@ -165,7 +166,7 @@ TEMPLATE_LIST_TEST_CASE("quaternion inversion", "[quaternion]", type::floating_p
 
     SECTION("inverting a zero quaternion throws rather than dividing by zero")
     {
-        REQUIRE_THROWS(quat(0, 0, 0, 0).inverse());
+        REQUIRE_THROWS_AS(quat(0, 0, 0, 0).inverse(), std::domain_error);
     }
 }
 
@@ -178,8 +179,8 @@ TEMPLATE_LIST_TEST_CASE("quaternion multiplication", "[quaternion]", type::float
     SECTION("composition applies the right operand first")
     {
         quat aboutZ, aboutX;
-        aboutZ.set_from_euler({0, 0, QUARTER_TURN});
-        aboutX.set_from_euler({QUARTER_TURN, 0, 0});
+        aboutZ.set_from_euler({0, 0, static_cast<TestType>(QUARTER_TURN)});
+        aboutX.set_from_euler({static_cast<TestType>(QUARTER_TURN), 0, 0});
 
         const vec probe{1, 0, 0};
         const auto composed = turn_by(aboutX * aboutZ, probe);
@@ -230,24 +231,24 @@ TEMPLATE_LIST_TEST_CASE("quaternion euler conversion", "[quaternion]", type::flo
     using quat = quaternion<component_type>;
     using vec = vector3<component_type>;
 
-    SECTION("set_from_euler takes {roll about X, pitch about Y, yaw about Z}")
+    SECTION("set_from_euler takes {pitch about X, heading about Y, roll about Z}")
     {
         const vec probe{1, 1, 1};
 
-        quat roll;
-        roll.set_from_euler({QUARTER_TURN, 0, 0});
-        const auto rolled = turn_by(roll, probe);
-        REQUIRE(rolled.x == Approx(1.0f).margin(1e-5));   
-
         quat pitch;
-        pitch.set_from_euler({0, QUARTER_TURN, 0});
+        pitch.set_from_euler({static_cast<TestType>(QUARTER_TURN), 0, 0});
         const auto pitched = turn_by(pitch, probe);
-        REQUIRE(pitched.y == Approx(1.0f).margin(1e-5)); 
+        REQUIRE(pitched.x == Approx(1.0f).margin(1e-5));
 
-        quat yaw;
-        yaw.set_from_euler({0, 0, QUARTER_TURN});
-        const auto yawed = turn_by(yaw, probe);
-        REQUIRE(yawed.z == Approx(1.0f).margin(1e-5));   
+        quat heading;
+        heading.set_from_euler({0, static_cast<TestType>(QUARTER_TURN), 0});
+        const auto headed = turn_by(heading, probe);
+        REQUIRE(headed.y == Approx(1.0f).margin(1e-5));
+
+        quat roll;
+        roll.set_from_euler({0, 0, static_cast<TestType>(QUARTER_TURN)});
+        const auto rolled = turn_by(roll, probe);
+        REQUIRE(rolled.z == Approx(1.0f).margin(1e-5));
     }
 
     SECTION("**euler angles compose YXZ: heading about Y, then pitch about X, then roll about Z**")
@@ -289,7 +290,7 @@ TEMPLATE_LIST_TEST_CASE("quaternion euler conversion", "[quaternion]", type::flo
     SECTION("to_euler survives the gimbal lock pole rather than returning NaN")
     {
         // 0.7071068 is a rounded sqrt(0.5): what a 90 degree rotation is written as by hand.
-        const quat pole(0, 0.7071068, 0, 0.7071068);
+        const quat pole(0, static_cast<TestType>(0.7071068), 0, static_cast<TestType>(0.7071068));
 
         const auto e = pole.to_euler();
 

@@ -1,13 +1,14 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_QUATERNION_H
 #define GDK_MATH_QUATERNION_H
 
-#include <gdk/math_concepts.h>
-#include <gdk/storage.inl> // varies by implementation
+#include <gdk/math/concepts.h>
+#include <gdk/math/config.h>
+#include <gdk/math/storage.inl> // varies by implementation
 
-#include <gdk/math_constants.h>
-#include <gdk/vector3.h>
+#include <gdk/math/constants.h>
+#include <gdk/math/vector3.h>
 
 #include <algorithm>
 #include <cmath>
@@ -15,11 +16,7 @@
 #include <stdexcept>
 #include <type_traits>
 
-#ifndef GDK_MATH_FAST_TRANSCENDENTALS
-#define GDK_MATH_FAST_TRANSCENDENTALS 0
-#endif
-
-namespace gdk {
+namespace gdk::math {
     /// \brief Used to represent 3d rotations 
     template<floating_point_component component_type_param = float>
     class quaternion final : public quaternion_storage<component_type_param> {
@@ -50,7 +47,7 @@ namespace gdk {
         //! the unit axis this rotation turns about
         [[nodiscard]] vector3<component_type> axis() const;
 
-        //! full inverse; use for non-unit quaternions
+        //! full inverse; use for non-unit quaternions. Throws std::domain_error for a zero quaternion.
         [[nodiscard]] constexpr quaternion<component_type> inverse() const;
 
         //! faster inverse, but the quaternion must be unit length
@@ -72,10 +69,8 @@ namespace gdk {
         //! negation of all four components
         [[nodiscard]] constexpr quaternion<component_type> operator-() const;
 
-        //! the negation of operator==
-
         //! construct from euler angles, in radians. YXZ 
-        constexpr explicit quaternion(const vector3<component_type> &aEulerAngles);
+        explicit quaternion(const vector3<component_type> &aEulerAngles);
 
         constexpr quaternion(const component_type &aX, const component_type &aY,
             const component_type &aZ, const component_type &aW);
@@ -99,21 +94,21 @@ namespace gdk {
     //! spherical linear interpolation: constant angular velocity along the shorter arc
     ///
     /// Interpolates for t in [0, 1] and extrapolates along the same great circle outside it.
-    template <typename component_type>
+    template<floating_point_component component_type>
     [[nodiscard]] quaternion<component_type> slerp(const quaternion<component_type> &a,
         const quaternion<component_type> &b, const component_type t);
 
     //! normalized linear interpolation: cheaper than slerp, and not constant velocity
-    template <typename component_type>
+    template<floating_point_component component_type>
     [[nodiscard]] quaternion<component_type> nlerp(const quaternion<component_type> &a,
         const quaternion<component_type> &b, const component_type t);
 
     //! quaternion multiplication: compose two rotations, rightmost applied first
-    template <typename component_type>
+    template<floating_point_component component_type>
     [[nodiscard]] constexpr quaternion<component_type> operator*(const quaternion<component_type> &a,
         const quaternion<component_type> &b);
 }
 
-#include <gdk/quaternion.inl> // varies by implementation
+#include <gdk/math/quaternion.inl> // varies by implementation
 
 #endif

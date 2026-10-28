@@ -1,20 +1,18 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <gdk/math.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
 #include <vector>
 
-#ifndef GDK_MATH_BENCH_BACKEND
-#define GDK_MATH_BENCH_BACKEND "unknown"
-#endif
-
-using namespace gdk;
+using namespace gdk::math;
 
 namespace {
     using vec3 = vector3<float>;
@@ -23,10 +21,16 @@ namespace {
     using mat3 = matrix3x3<float>;
     using mat4 = matrix4x4<float>;
 
-    inline void clobber() { asm volatile("" : : : "memory"); }
+    void *volatile escaped = nullptr;
+
+    inline void clobber() { std::atomic_signal_fence(std::memory_order_seq_cst); }
 
     template <typename value_type>
-    inline void escape(value_type &aValue) { asm volatile("" : : "g"(&aValue) : "memory"); }
+    inline void escape(value_type &aValue) {
+        escaped = &aValue;
+
+        clobber();
+    }
 
     struct random_source final {
         std::uint32_t state;

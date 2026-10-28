@@ -1,16 +1,16 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_VECTOR4_H
 #define GDK_MATH_VECTOR4_H
 
-#include <gdk/math_concepts.h>
-#include <gdk/storage.inl> // varies by implementation
+#include <gdk/math/concepts.h>
+#include <gdk/math/storage.inl> // varies by implementation
 
-#include <gdk/vector3.h>
+#include <gdk/math/vector3.h>
 
 #include <iosfwd>
 
-namespace gdk {
+namespace gdk::math {
     /// \brief a homogeneous coordinate: a 3d position or direction plus w
     /// - w = 1 marks a position, so a transform's translation applies to it
     /// - w = 0 marks a direction, so it does not
@@ -35,11 +35,11 @@ namespace gdk {
         vector4<component_type> &operator=(const vector4<component_type> &) = default;
 
         constexpr vector4(const component_type &aX, const component_type &aY,
-            const component_type &aZ, const component_type &aW = 1.);
+            const component_type &aZ, const component_type &aW = component_type(1));
 
         //! extend a vector3, defaulting w to 1
         constexpr vector4(const vector3<component_type> &avector3,
-            const component_type &aW = 1.);
+            const component_type &aW = component_type(1));
 
         //! make a direction from a vector3 
         [[nodiscard]] static constexpr vector4<component_type> direction(const vector3<component_type> &aVector);
@@ -54,6 +54,6 @@ namespace gdk {
     };
 }
 
-#include <gdk/vector4.inl> // varies by implementation
+#include <gdk/math/vector4.inl> // varies by implementation
 
 #endif

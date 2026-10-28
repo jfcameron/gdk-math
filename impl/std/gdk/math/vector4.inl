@@ -1,9 +1,9 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_IMPL_STD_VECTOR4_INL
 #define GDK_MATH_IMPL_STD_VECTOR4_INL
 
-namespace gdk {
+namespace gdk::math {
     template<arithmetic_component component_type>
     constexpr vector3<component_type> vector4<component_type>::xyz() const {
         return {x, y, z};
@@ -13,7 +13,8 @@ namespace gdk {
     constexpr vector3<component_type> vector4<component_type>::to_point() const {
         if (w == static_cast<component_type>(0)) return xyz();
 
-        return {x / w, y / w, z / w};
+        return {static_cast<component_type>(x / w), static_cast<component_type>(y / w),
+            static_cast<component_type>(z / w)};
     }
 
     template<arithmetic_component component_type>
@@ -41,10 +42,10 @@ namespace gdk {
 
     template<arithmetic_component component_type>
     constexpr vector4<component_type>::vector4()
-    : vector4<component_type>(0., 0., 0., 1.)
+    : vector4<component_type>(component_type(0), component_type(0), component_type(0), component_type(1))
     {}
 
-    template<arithmetic_component T> const vector4<T> vector4<T>::origin = {0., 0., 0., 1.};
+    template<arithmetic_component T> const vector4<T> vector4<T>::origin = {T(0), T(0), T(0), T(1)};
 }
 
 #endif

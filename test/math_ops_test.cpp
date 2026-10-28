@@ -1,13 +1,15 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
 
 #include <cmath>
 
-using namespace gdk;
+using namespace gdk::math;
 
 namespace {
     constexpr float QUARTER_TURN = to_radians(90.0f);
@@ -37,10 +39,8 @@ namespace {
 
 TEMPLATE_LIST_TEST_CASE("gdk::math_ops matrix4x4 * vector4", "[math_ops]", type::floating_point)
 {
-    using vec3 = vector3<TestType>;
     using vec4 = vector4<TestType>;
     using mat = matrix4x4<TestType>;
-    using quat = quaternion<TestType>;
 
     SECTION("it is the product a shader computes, M * v")
     {
@@ -55,7 +55,7 @@ TEMPLATE_LIST_TEST_CASE("gdk::math_ops matrix4x4 * vector4", "[math_ops]", type:
         const auto result = m * v;
 
         for (std::size_t row = 0; row < mat::order; ++row) {
-            float expected = 0;
+            typename mat::component_type expected = 0;
             for (std::size_t column = 0; column < mat::order; ++column)
                 expected += m.get(column, row) * component(v, column);
 
@@ -80,7 +80,6 @@ TEMPLATE_LIST_TEST_CASE("gdk::math_ops matrix4x4 * vector3", "[math_ops]", type:
     using vec3 = vector3<TestType>;
     using vec4 = vector4<TestType>;
     using mat = matrix4x4<TestType>;
-    using quat = quaternion<TestType>;
 
     SECTION("it agrees with the vector4 product extended by w = 1")
     {
@@ -125,7 +124,6 @@ TEMPLATE_LIST_TEST_CASE("gdk::math_ops matrix4x4 * vector3", "[math_ops]", type:
 TEMPLATE_LIST_TEST_CASE("gdk::math_ops quaternion * vector3", "[math_ops]", type::floating_point)
 {
     using vec3 = vector3<TestType>;
-    using vec4 = vector4<TestType>;
     using mat = matrix4x4<TestType>;
     using quat = quaternion<TestType>;
 

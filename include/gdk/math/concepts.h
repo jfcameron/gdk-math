@@ -1,12 +1,13 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
-#ifndef GDK_MATH_MATH_CONCEPTS_H
-#define GDK_MATH_MATH_CONCEPTS_H
+#ifndef GDK_MATH_CONCEPTS_H
+#define GDK_MATH_CONCEPTS_H
 
 #include <type_traits>
 
-/// \file what the types in this library may be made of.
-namespace gdk {
+/// \file
+/// what the types in this library may be made of
+namespace gdk::math {
     template<typename T>
     concept arithmetic_component = std::is_arithmetic_v<T> && std::is_signed_v<T>;
 

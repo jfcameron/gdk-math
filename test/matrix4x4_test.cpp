@@ -1,8 +1,10 @@
-// © 2018 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <string>
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
@@ -11,7 +13,7 @@
 #include <cmath>
 #include <stdexcept>
 
-using namespace gdk;
+using namespace gdk::math;
 
 namespace {
     template<typename T>
@@ -65,8 +67,6 @@ TEMPLATE_LIST_TEST_CASE("mat4x4 constructors", "[mat4x4]", type::floating_point)
 {
     using component_type = TestType;
     using mat_type = matrix4x4<component_type>;
-    using quat_type = quaternion<component_type>;
-    using vec_type = vector3<component_type>;
 
     SECTION("Default constructor produces an identity matrix")
     {
@@ -80,8 +80,6 @@ TEMPLATE_LIST_TEST_CASE("mat4x4 operators", "[mat4x4]", type::floating_point)
 {
     using component_type = TestType;
     using mat_type = matrix4x4<component_type>;
-    using quat_type = quaternion<component_type>;
-    using vec_type = vector3<component_type>;
 
     SECTION("equality operator")
     {
@@ -237,7 +235,6 @@ TEMPLATE_LIST_TEST_CASE("mat4x4 transpose", "[mat4x4]", type::floating_point)
     using component_type = TestType;
     using mat_type = matrix4x4<component_type>;
     using quat_type = quaternion<component_type>;
-    using vec_type = vector3<component_type>;
 
     SECTION("swapping twice returns the original")
     {
@@ -294,7 +291,6 @@ TEMPLATE_LIST_TEST_CASE("mat4x4 inverse", "[mat4x4]", type::floating_point)
     using component_type = TestType;
     using mat_type = matrix4x4<component_type>;
     using quat_type = quaternion<component_type>;
-    using vec_type = vector3<component_type>;
 
     SECTION("a transform composed with its inverse is identity")
     {
@@ -324,7 +320,7 @@ TEMPLATE_LIST_TEST_CASE("mat4x4 inverse", "[mat4x4]", type::floating_point)
     }
 }
 
-TEST_CASE("gdk::matrix4x4 constructors", "[mat4x4]")
+TEST_CASE("gdk::math::matrix4x4 constructors", "[mat4x4]")
 {
     using mat = matrix4x4<float>;
     using quat = quaternion<float>;
@@ -369,5 +365,104 @@ TEST_CASE("gdk::matrix4x4 constructors", "[mat4x4]")
 
         REQUIRE(a.translation() == vec(4, 5, 6));
         REQUIRE(a.scale().x == Approx(1.0f));
+    }
+}
+
+TEMPLATE_LIST_TEST_CASE("matrix4x4 inverse_affine", "[matrix4x4]", type::floating_point)
+{
+    using component_type = TestType;
+    using quat_type = quaternion<component_type>;
+    using vec_type = vector3<component_type>;
+    using mat_type = matrix4x4<component_type>;
+
+    SECTION("**it agrees with inversed() for any translation, rotation and scale**")
+    {
+        const vec_type translations[] = {{0, 0, 0}, {5, -2, 3}};
+        const vec_type scales[] = {{1, 1, 1}, {2, 3, 4}, {-1, 2, 0.5f}};
+
+        for (const auto &euler : EULERS<component_type>)
+            for (const auto &translation : translations)
+                for (const auto &scale : scales) {
+                    const mat_type m(translation, quat_type(euler), scale);
+
+                    auto fast = m;
+                    fast.inverse_affine();
+
+                    const auto full = m.inversed();
+
+                    for (std::size_t column = 0; column < mat_type::order; ++column)
+                        for (std::size_t row = 0; row < mat_type::order; ++row)
+                            REQUIRE(fast.get(column, row) == Approx(full.get(column, row)).margin(1e-4));
+                }
+    }
+
+    SECTION("it takes a transformed point back to where it started")
+    {
+        const mat_type m(vec_type{5, -2, 3}, quat_type(EULERS<component_type>[2]), vec_type{2, 3, 4});
+
+        auto inverse = m;
+        inverse.inverse_affine();
+
+        const vec_type point{1, -7, 0.5f};
+        const auto back = inverse * (m * point);
+
+        REQUIRE(back.x == Approx(point.x).margin(1e-4));
+        REQUIRE(back.y == Approx(point.y).margin(1e-4));
+        REQUIRE(back.z == Approx(point.z).margin(1e-4));
+    }
+
+    SECTION("a zero scale axis has no inverse")
+    {
+        mat_type flat(vec_type{1, 2, 3}, quat_type::identity, vec_type{1, 0, 1});
+
+        REQUIRE_THROWS_AS(flat.inverse_affine(), std::domain_error);
+    }
+}
+
+TEMPLATE_LIST_TEST_CASE("matrix4x4 decomposition with a zero scale axis", "[matrix4x4]", type::floating_point)
+{
+    using component_type = TestType;
+    using quat_type = quaternion<component_type>;
+    using vec_type = vector3<component_type>;
+    using mat_type = matrix4x4<component_type>;
+
+    const vec_type flattened[] = {{0, 1, 1}, {1, 0, 1}, {1, 1, 0}};
+
+    SECTION("**rotation() rebuilds one zero axis from the other two rather than returning NaN**")
+    {
+        for (const auto &euler : EULERS<component_type>)
+            for (const auto &scale : flattened) {
+                const quat_type q(euler);
+                const mat_type m(vec_type{1, 2, 3}, q, scale);
+
+                REQUIRE(rotation_difference(m.rotation(), q) < 1e-4);
+            }
+    }
+
+    SECTION("so set_scale brings a flattened transform back")
+    {
+        for (const auto &euler : EULERS<component_type>)
+            for (const auto &scale : flattened) {
+                const quat_type q(euler);
+                mat_type m(vec_type{1, 2, 3}, q, scale);
+
+                m.set_scale({2, 3, 4});
+
+                const auto restored = m.scale();
+                REQUIRE(restored.x == Approx(2.0).margin(1e-4));
+                REQUIRE(restored.y == Approx(3.0).margin(1e-4));
+                REQUIRE(restored.z == Approx(4.0).margin(1e-4));
+
+                REQUIRE(rotation_difference(m.rotation(), q) < 1e-4);
+                REQUIRE(m.translation() == vec_type{1, 2, 3});
+            }
+    }
+
+    SECTION("two zero axes describe no single rotation, and say so")
+    {
+        mat_type m(vec_type{1, 2, 3}, quat_type(EULERS<component_type>[0]), vec_type{0, 0, 1});
+
+        REQUIRE_THROWS_AS(m.rotation(), std::domain_error);
+        REQUIRE_THROWS_AS(m.set_scale({1, 1, 1}), std::domain_error);
     }
 }

@@ -1,16 +1,17 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
-#ifndef GDK_MATH_MATH_OPS_H
-#define GDK_MATH_MATH_OPS_H
+#ifndef GDK_MATH_OPS_H
+#define GDK_MATH_OPS_H
 
-#include <gdk/matrix3x3.h>
-#include <gdk/matrix4x4.h>
-#include <gdk/quaternion.h>
-#include <gdk/vector3.h>
-#include <gdk/vector4.h>
+#include <gdk/math/matrix3x3.h>
+#include <gdk/math/matrix4x4.h>
+#include <gdk/math/quaternion.h>
+#include <gdk/math/vector3.h>
+#include <gdk/math/vector4.h>
 
-/// \file Every operation that combines two *different* math types
-namespace gdk {
+/// \file
+/// every operation that combines two *different* math types
+namespace gdk::math {
     //! apply a transform to a 4d vector, as `M * v` 
     template<typename component_type>
     [[nodiscard]] constexpr vector4<component_type> operator*(const matrix4x4<component_type> &aMatrix,

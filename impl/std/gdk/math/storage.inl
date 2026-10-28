@@ -1,4 +1,4 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_IMPL_STD_STORAGE_INL
 #define GDK_MATH_IMPL_STD_STORAGE_INL
@@ -6,7 +6,7 @@
 #include <array>
 #include <cstddef>
 
-namespace gdk {
+namespace gdk::math {
     template<arithmetic_component component_type>
     class vector2_storage {
     public:
@@ -22,7 +22,7 @@ namespace gdk {
     template<arithmetic_component component_type>
     class vector4_storage {
     public:
-        component_type x = {0.}, y = {0.}, z = {0.}, w = {1.};
+        component_type x = {0}, y = {0}, z = {0}, w = {1};
     };
 
     template<arithmetic_component component_type>

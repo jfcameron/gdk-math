@@ -1,21 +1,22 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_VECTOR3_H
 #define GDK_MATH_VECTOR3_H
 
-#include <gdk/math_concepts.h>
-#include <gdk/storage.inl> // varies by implementation
+#include <gdk/math/concepts.h>
+#include <gdk/math/storage.inl> // varies by implementation
 
-#include <gdk/math_constants.h>
+#include <gdk/math/constants.h>
 
 #include <algorithm>
 #include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <iosfwd>
 #include <stdexcept>
 #include <type_traits>
 
-namespace gdk {
+namespace gdk::math {
     /// \brief 3d vector used to represent position, scale, velocity, heading, euler angles, etc.
     /// - **right-handed**: +X right, +Y up, +Z back
     template<arithmetic_component component_type_param = float>
@@ -53,7 +54,7 @@ namespace gdk {
         static const vector3 zero;
 
         //! faster than a component-wise check, but not appropriate if each component must be exactly zero
-        [[nodiscard]] constexpr bool is_effectively_zero() const;
+        [[nodiscard]] constexpr bool is_effectively_zero() const requires std::floating_point<component_type>;
         [[nodiscard]] component_type distance_from(const vector3 &that) const;
         [[nodiscard]] constexpr component_type dot_product(const vector3 &that) const;
         [[nodiscard]] component_type length() const;
@@ -61,12 +62,12 @@ namespace gdk {
         [[nodiscard]] constexpr component_type length_squared() const;
         [[nodiscard]] constexpr vector3 cross_product(const vector3 &that) const;
         [[nodiscard]] constexpr vector3 element_wise_product(const vector3 &aOther) const;
-        [[nodiscard]] vector3 normal() const;
+        [[nodiscard]] vector3 normal() const requires std::floating_point<component_type>;
 
-        vector3 &normalize();
+        vector3 &normalize() requires std::floating_point<component_type>;
 
         //! the angle between two directions, in radians, on [0, pi]. Zero for a zero-length operand.
-        [[nodiscard]] component_type angle_between(const vector3 &that) const;
+        [[nodiscard]] component_type angle_between(const vector3 &that) const requires std::floating_point<component_type>;
 
         //! mirror this vector about a surface with the given normal. aNormal is assumed unit length.
         [[nodiscard]] constexpr vector3 reflect(const vector3 &aNormal) const;
@@ -91,12 +92,12 @@ namespace gdk {
 
     };
 
-    //! linear interpolation, 
-    template<typename component_type>
+    //! linear interpolation
+    template<arithmetic_component component_type>
     [[nodiscard]] constexpr vector3<component_type> lerp(const vector3<component_type> &a,
         const vector3<component_type> &b, const component_type t);
 }
 
-#include <gdk/vector3.inl> // varies by implementation
+#include <gdk/math/vector3.inl> // varies by implementation
 
 #endif

@@ -1,4 +1,4 @@
-# © Joseph Cameron - All Rights Reserved
+# © Joseph Cameron - MIT License
 
 jfc_add_tests(
     C++_STANDARD 20
@@ -27,11 +27,6 @@ add_library(gdkmath_cxx20_conformance OBJECT "${CMAKE_CURRENT_LIST_DIR}/cxx20_co
 
 target_link_libraries(gdkmath_cxx20_conformance PRIVATE gdkmath)
 
-target_compile_definitions(gdkmath_cxx20_conformance
-    PRIVATE
-        GDK_MATH_FAST_TRANSCENDENTALS=${GDK_MATH_FAST_TRANSCENDENTALS_VALUE}
-        GDK_MATH_SIMD=${GDK_MATH_SIMD_VALUE})
-
 set_target_properties(gdkmath_cxx20_conformance PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
@@ -44,3 +39,18 @@ else()
         -pedantic-errors -Wall -Wextra -Wfloat-conversion -Werror)
 endif()
 
+
+if (NOT CMAKE_CROSSCOMPILING)
+    add_test(NAME gdk-math_install_and_consume
+        COMMAND "${CMAKE_COMMAND}"
+            "-DBUILD_DIR=${PROJECT_BINARY_DIR}"
+            "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/install_and_consume"
+            "-DCONFIG=$<CONFIG>"
+            "-DGENERATOR=${CMAKE_GENERATOR}"
+            "-DPLATFORM=${CMAKE_GENERATOR_PLATFORM}"
+            "-DTOOLSET=${CMAKE_GENERATOR_TOOLSET}"
+            "-DCXX_COMPILER=${CMAKE_CXX_COMPILER}"
+            "-DCXX_FLAGS=${CMAKE_CXX_FLAGS}"
+            "-DEXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/install/install_and_consume.cmake")
+endif()

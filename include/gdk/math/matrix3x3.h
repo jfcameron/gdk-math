@@ -1,10 +1,10 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
-#ifndef GDK_MATH_MAT3X3_H
-#define GDK_MATH_MAT3X3_H
+#ifndef GDK_MATH_MATRIX3X3_H
+#define GDK_MATH_MATRIX3X3_H
 
-#include <gdk/math_concepts.h>
-#include <gdk/storage.inl> // varies by implementation 
+#include <gdk/math/concepts.h>
+#include <gdk/math/storage.inl> // varies by implementation 
 
 #include <array>
 #include <cstddef>
@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace gdk {
+namespace gdk::math {
     /// \brief 3 by 3 matrix: the linear part of a transform, without translation
     /// - **column-major**: data layout is column first
     /// - **Storage order is part of the interface, it does not vary with implementations.**
@@ -33,9 +33,10 @@ namespace gdk {
         constexpr std::size_t index(order_type aX, order_type aY) const;
 
     public:
-        //! write one element. **Column first, row second.**
+        //! write one element. **Column first, row second.** Unchecked: each must be less than order.
         constexpr void set(const order_type aX, const order_type aY, const component_type aValue);
 
+        //! one element, column first, row second. Unchecked: each must be less than order.
         constexpr component_type &get(const order_type aX, const order_type aY);
         [[nodiscard]] constexpr const component_type &get(const order_type aX, const order_type aY) const;
 
@@ -89,6 +90,6 @@ namespace gdk {
     };
 }
 
-#include <gdk/matrix3x3.inl> // varies by implementation 
+#include <gdk/math/matrix3x3.inl> // varies by implementation 
 
 #endif

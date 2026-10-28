@@ -1,9 +1,9 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_IMPL_STD_MATRIX3X3_INL
 #define GDK_MATH_IMPL_STD_MATRIX3X3_INL
 
-namespace gdk {
+namespace gdk::math {
     template<floating_point_component component_type>
     constexpr std::size_t matrix3x3<component_type>::index(order_type aX, order_type aY) const {
         return aX * order + aY;

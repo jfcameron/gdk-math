@@ -1,13 +1,15 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
 
 #include <stdexcept>
 
-using namespace gdk;
+using namespace gdk::math;
 
 namespace {
     template<typename T>

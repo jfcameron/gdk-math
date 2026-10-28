@@ -1,17 +1,17 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_MATH_H
 #define GDK_MATH_MATH_H
 
-#include <gdk/math_concepts.h>
-#include <gdk/math_constants.h>
-#include <gdk/math_batch.h>
-#include <gdk/math_ops.h>
-#include <gdk/matrix3x3.h>
-#include <gdk/matrix4x4.h>
-#include <gdk/quaternion.h>
-#include <gdk/vector2.h>
-#include <gdk/vector3.h>
-#include <gdk/vector4.h>
+#include <gdk/math/concepts.h>
+#include <gdk/math/constants.h>
+#include <gdk/math/batch.h>
+#include <gdk/math/ops.h>
+#include <gdk/math/matrix3x3.h>
+#include <gdk/math/matrix4x4.h>
+#include <gdk/math/quaternion.h>
+#include <gdk/math/vector2.h>
+#include <gdk/math/vector3.h>
+#include <gdk/math/vector4.h>
 
 #endif

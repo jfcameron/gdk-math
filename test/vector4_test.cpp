@@ -1,6 +1,8 @@
-// © 2018 Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
@@ -8,13 +10,12 @@
 #include <cmath>
 #include <type_traits>
 
-using namespace gdk;
+using namespace gdk::math;
 
 TEMPLATE_LIST_TEST_CASE("vector4 constructors", "[vector4]", type::floating_point)
 {
     using vec4 = vector4<TestType>;
     using vec3 = vector3<TestType>;
-    using mat4 = matrix4x4<TestType>;
 
     SECTION("origin agrees with the default constructor")
     {
@@ -68,7 +69,6 @@ TEMPLATE_LIST_TEST_CASE("vector4 operators", "[vector4]", type::floating_point)
 {
     using vec4 = vector4<TestType>;
     using vec3 = vector3<TestType>;
-    using mat4 = matrix4x4<TestType>;
 
     SECTION("it has no arithmetic, deliberately")
     {

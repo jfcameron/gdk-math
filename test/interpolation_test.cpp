@@ -1,13 +1,15 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
 
 #include <cmath>
 
-using namespace gdk;
+using namespace gdk::math;
 
 namespace {
     constexpr float QUARTER_TURN = to_radians(90.0f);
@@ -27,10 +29,12 @@ namespace {
 
     template<typename T>
     double rotation_error_degrees(const quaternion<double> &reference, const quaternion<T> &actual) {
-        const double n = std::sqrt(static_cast<double>(actual.x) * actual.x + static_cast<double>(actual.y) * actual.y +
-            static_cast<double>(actual.z) * actual.z + static_cast<double>(actual.w) * actual.w);
+        const auto ax = static_cast<double>(actual.x), ay = static_cast<double>(actual.y);
+        const auto az = static_cast<double>(actual.z), aw = static_cast<double>(actual.w);
 
-        const double x = actual.x / n, y = actual.y / n, z = actual.z / n, w = actual.w / n;
+        const double n = std::sqrt(ax * ax + ay * ay + az * az + aw * aw);
+
+        const double x = ax / n, y = ay / n, z = az / n, w = aw / n;
 
         const auto chord = [&](const double sign) {
             const double dx = reference.x - sign * x, dy = reference.y - sign * y;
@@ -61,9 +65,8 @@ namespace {
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::quaternion axis-angle construction", "[quaternion][interpolation]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::quaternion axis-angle construction", "[quaternion][interpolation]", type::floating_point)
 {
-    using vec2 = vector2<TestType>;
     using vec = vector3<TestType>;
     using quat = quaternion<TestType>;
 
@@ -121,9 +124,8 @@ TEMPLATE_LIST_TEST_CASE("gdk::quaternion axis-angle construction", "[quaternion]
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::slerp", "[quaternion][interpolation]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::slerp", "[quaternion][interpolation]", type::floating_point)
 {
-    using vec2 = vector2<TestType>;
     using vec = vector3<TestType>;
     using quat = quaternion<TestType>;
 
@@ -201,7 +203,7 @@ TEMPLATE_LIST_TEST_CASE("gdk::slerp", "[quaternion][interpolation]", type::float
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::slerp accuracy", "[quaternion][interpolation]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::slerp accuracy", "[quaternion][interpolation]", type::floating_point)
 {
     using vec = vector3<TestType>;
     using quat = quaternion<TestType>;
@@ -220,7 +222,10 @@ TEMPLATE_LIST_TEST_CASE("gdk::slerp accuracy", "[quaternion][interpolation]", ty
             const auto a = quat::from_angle_axis(0.4f, vec(1, 2, 3).normal());
             const auto b = a * quat::from_angle_axis(angle, vec(-2, 1, 0.5f).normal());
 
-            const quaternion<double> aRef(a.x, a.y, a.z, a.w), bRef(b.x, b.y, b.z, b.w);
+            const quaternion<double> aRef(static_cast<double>(a.x), static_cast<double>(a.y),
+                static_cast<double>(a.z), static_cast<double>(a.w));
+            const quaternion<double> bRef(static_cast<double>(b.x), static_cast<double>(b.y),
+                static_cast<double>(b.z), static_cast<double>(b.w));
 
             for (int step = 0; step <= 20; ++step) {
                 const auto t = static_cast<TestType>(step * 0.05);
@@ -258,9 +263,8 @@ TEMPLATE_LIST_TEST_CASE("gdk::slerp accuracy", "[quaternion][interpolation]", ty
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::nlerp", "[quaternion][interpolation]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::nlerp", "[quaternion][interpolation]", type::floating_point)
 {
-    using vec2 = vector2<TestType>;
     using vec = vector3<TestType>;
     using quat = quaternion<TestType>;
 
@@ -297,11 +301,10 @@ TEMPLATE_LIST_TEST_CASE("gdk::nlerp", "[quaternion][interpolation]", type::float
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::lerp for vectors", "[vector3][vector2][interpolation]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::lerp for vectors", "[vector3][vector2][interpolation]", type::floating_point)
 {
     using vec2 = vector2<TestType>;
     using vec = vector3<TestType>;
-    using quat = quaternion<TestType>;
 
     SECTION("endpoints and midpoint")
     {
@@ -327,11 +330,9 @@ TEMPLATE_LIST_TEST_CASE("gdk::lerp for vectors", "[vector3][vector2][interpolati
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::vector3 reflect and angle_between", "[vector3]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::vector3 reflect and angle_between", "[vector3]", type::floating_point)
 {
-    using vec2 = vector2<TestType>;
     using vec = vector3<TestType>;
-    using quat = quaternion<TestType>;
 
     SECTION("a vector reflects off a surface")
     {
@@ -383,11 +384,8 @@ TEMPLATE_LIST_TEST_CASE("gdk::vector3 reflect and angle_between", "[vector3]", t
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::to_radians and to_degrees", "[math_constants]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::to_radians and to_degrees", "[math_constants]", type::floating_point)
 {
-    using vec2 = vector2<TestType>;
-    using vec = vector3<TestType>;
-    using quat = quaternion<TestType>;
 
     SECTION("the landmarks")
     {

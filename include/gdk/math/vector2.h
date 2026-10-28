@@ -1,22 +1,23 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_VECTOR2_H
 #define GDK_MATH_VECTOR2_H
 
-#include <gdk/math_concepts.h>
-#include <gdk/storage.inl> // varies by implementation
+#include <gdk/math/concepts.h>
+#include <gdk/math/storage.inl> // varies by implementation
 
-#include <gdk/math_constants.h>
+#include <gdk/math/constants.h>
 
 #include <algorithm>
 #include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <iosfwd>
 #include <stdexcept>
 #include <tuple>
 #include <type_traits>
 
-namespace gdk {
+namespace gdk::math {
     /// \brief 2d vector used to represent position, speed, direction, normalized coordinates
     template<arithmetic_component component_type_param = float>
     class vector2 final : public vector2_storage<component_type_param> {
@@ -39,7 +40,7 @@ namespace gdk {
         [[nodiscard]] constexpr component_type length_squared() const;
 
         //! faster than a component-wise check, but not appropriate if each component must be exactly zero
-        [[nodiscard]] constexpr bool is_effectively_zero() const;
+        [[nodiscard]] constexpr bool is_effectively_zero() const requires std::floating_point<component_type>;
 
         //! calculate the distance between this and another vector
         [[nodiscard]] component_type distance_from(const vector2<component_type> &other) const;
@@ -48,7 +49,7 @@ namespace gdk {
         [[nodiscard]] constexpr component_type aspect_ratio() const;
 
         //! returns a new vector containing the element-wise product of this vector and another
-        [[nodiscard]] vector2<component_type> element_wise_product(
+        [[nodiscard]] constexpr vector2<component_type> element_wise_product(
             const vector2<component_type> &aOther) const;
 
         //! calculate the dot product of this and another vector
@@ -58,13 +59,13 @@ namespace gdk {
         [[nodiscard]] constexpr component_type cross_product(const vector2<component_type> &other) const;
 
         //! a unit length copy. Zero for an effectively-zero vector, matching normalize().
-        [[nodiscard]] vector2<component_type> normal() const;
+        [[nodiscard]] vector2<component_type> normal() const requires std::floating_point<component_type>;
 
         //! normalize the vector
-        vector2<component_type> &normalize();
+        vector2<component_type> &normalize() requires std::floating_point<component_type>;
 
         //! the angle between two directions, in radians, on [0, pi]. Zero for a zero-length operand.
-        [[nodiscard]] component_type angle_between(const vector2<component_type> &that) const;
+        [[nodiscard]] component_type angle_between(const vector2<component_type> &that) const requires std::floating_point<component_type>;
 
         //! mirror this vector about a line with the given normal. aNormal is assumed unit length.
         [[nodiscard]] constexpr vector2<component_type> reflect(const vector2<component_type> &aNormal) const;
@@ -92,7 +93,8 @@ namespace gdk {
         vector2<component_type> &operator=(const vector2<component_type> &) = default;
 
         constexpr vector2(const component_type aX, const component_type aY);
-        constexpr vector2(const component_type aScalar);
+        //! set a single scalar value to both components
+        constexpr explicit vector2(const component_type aScalar);
 
         //! build from a pair, converting the components
         template<class other_component_type = component_type>
@@ -113,11 +115,11 @@ namespace gdk {
     };
 
     //! linear interpolation
-    template<typename component_type>
+    template<arithmetic_component component_type>
     [[nodiscard]] constexpr vector2<component_type> lerp(const vector2<component_type> &a,
         const vector2<component_type> &b, const component_type t);
 }
 
-#include <gdk/vector2.inl> // varies by implementation
+#include <gdk/math/vector2.inl> // varies by implementation
 
 #endif

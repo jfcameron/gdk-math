@@ -1,16 +1,13 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
-#ifndef GDK_MATH_MATH_BATCH_H
-#define GDK_MATH_MATH_BATCH_H
+#ifndef GDK_MATH_BATCH_H
+#define GDK_MATH_BATCH_H
 
-#include <gdk/math_ops.h>
+#include <gdk/math/config.h>
+#include <gdk/math/ops.h>
 
 #include <span>
 #include <type_traits>
-
-#ifndef GDK_MATH_SIMD
-#define GDK_MATH_SIMD 1
-#endif
 
 #if GDK_MATH_SIMD && (defined(__SSE2__) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP >= 2))
 #define GDK_MATH_BATCH_SSE2 1
@@ -18,7 +15,15 @@
 #define GDK_MATH_BATCH_SSE2 0
 #endif
 
-namespace gdk {
+#if GDK_MATH_SIMD && defined(__aarch64__) && (defined(__GNUC__) || defined(__clang__))
+#define GDK_MATH_BATCH_NEON 1
+#else
+#define GDK_MATH_BATCH_NEON 0
+#endif
+
+#define GDK_MATH_BATCH_SIMD (GDK_MATH_BATCH_SSE2 || GDK_MATH_BATCH_NEON)
+
+namespace gdk::math {
     /// \brief The batch functions below are the throughput half of this library's interface.
     template<typename component_type>
     using batch_source = std::type_identity_t<std::span<const vector3<component_type>>>;
@@ -59,6 +64,6 @@ namespace gdk {
         batch_source<component_type> aSource, batch_destination<component_type> aDestination);
 }
 
-#include <gdk/math_batch.inl> // varies by implementation
+#include <gdk/math/batch.inl> // varies by implementation
 
 #endif

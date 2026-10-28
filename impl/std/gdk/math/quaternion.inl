@@ -1,9 +1,9 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_IMPL_STD_QUATERNION_INL
 #define GDK_MATH_IMPL_STD_QUATERNION_INL
 
-namespace gdk {
+namespace gdk::math {
     template<floating_point_component component_type>
     quaternion<component_type> quaternion<component_type>::normalized() const {
         const component_type magnitude = std::sqrt(x * x + y * y + z * z + w * w);
@@ -17,7 +17,7 @@ namespace gdk {
 
     template<floating_point_component component_type>
     void quaternion<component_type>::set_from_euler(const vector3<component_type> &aEulerAngles) {
-        static const component_type HALF(0.5);
+        constexpr component_type HALF(0.5);
 
         const auto heading(aEulerAngles.y);
         const auto pitch(aEulerAngles.x);
@@ -113,7 +113,7 @@ namespace gdk {
     constexpr quaternion<component_type> quaternion<component_type>::inverse() const {
         const component_type normSquared = x * x + y * y + z * z + w * w;
 
-        if (normSquared == 0.0f) throw std::runtime_error("Cannot invert a zero quaternion.");
+        if (normSquared == 0) throw std::domain_error("cannot invert a zero quaternion");
 
         const component_type invNorm = static_cast<component_type>(1.0) / normSquared;
 
@@ -142,7 +142,7 @@ namespace gdk {
     }
 
     template<floating_point_component component_type>
-    constexpr quaternion<component_type>::quaternion(const vector3<component_type> &aEulerAngles) {
+    quaternion<component_type>::quaternion(const vector3<component_type> &aEulerAngles) {
         set_from_euler(aEulerAngles);
     }
 

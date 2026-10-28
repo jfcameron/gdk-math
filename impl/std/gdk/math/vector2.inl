@@ -1,9 +1,9 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #ifndef GDK_MATH_IMPL_STD_VECTOR2_INL
 #define GDK_MATH_IMPL_STD_VECTOR2_INL
 
-namespace gdk {
+namespace gdk::math {
     template<arithmetic_component T> constexpr vector2<T> vector2<T>::min(const vector2<T> &a, const vector2<T> &b) {
         return {std::min(a.x, b.x), std::min(a.y, b.y)};
     }
@@ -14,16 +14,16 @@ namespace gdk {
 
     template<arithmetic_component component_type>
     component_type vector2<component_type>::length() const {
-        return std::sqrt((x * x) + (y * y));
+        return static_cast<component_type>(std::sqrt((x * x) + (y * y)));
     }
 
     template<arithmetic_component component_type>
     constexpr component_type vector2<component_type>::length_squared() const {
-        return (x * x) + (y * y);
+        return static_cast<component_type>((x * x) + (y * y));
     }
 
     template<arithmetic_component component_type>
-    constexpr bool vector2<component_type>::is_effectively_zero() const {
+    constexpr bool vector2<component_type>::is_effectively_zero() const requires std::floating_point<component_type> {
         return length_squared() < numbers::effectively_zero_length_squared_v<component_type>;
     }
 
@@ -32,7 +32,7 @@ namespace gdk {
         const auto dx = other.x - x;
         const auto dy = other.y - y;
 
-        return std::sqrt(dx * dx + dy * dy);
+        return static_cast<component_type>(std::sqrt(dx * dx + dy * dy));
     }
 
     template<arithmetic_component component_type>
@@ -41,28 +41,28 @@ namespace gdk {
     }
 
     template<arithmetic_component component_type>
-    vector2<component_type> vector2<component_type>::element_wise_product(
+    constexpr vector2<component_type> vector2<component_type>::element_wise_product(
         const vector2<component_type> &aOther) const {
-        return {x * aOther.x, y * aOther.y};
+        return {static_cast<component_type>(x * aOther.x), static_cast<component_type>(y * aOther.y)};
     }
 
     template<arithmetic_component component_type>
     constexpr component_type vector2<component_type>::dot_product(const vector2<component_type> &other) const {
-        return x * other.x + y * other.y;
+        return static_cast<component_type>(x * other.x + y * other.y);
     }
 
     template<arithmetic_component component_type>
     constexpr component_type vector2<component_type>::cross_product(const vector2<component_type> &other) const {
-        return x * other.y - other.x * y;
+        return static_cast<component_type>(x * other.y - other.x * y);
     }
 
     template<arithmetic_component component_type>
-    vector2<component_type> vector2<component_type>::normal() const {
+    vector2<component_type> vector2<component_type>::normal() const requires std::floating_point<component_type> {
         return vector2(*this).normalize();
     }
 
     template<arithmetic_component component_type>
-    vector2<component_type> &vector2<component_type>::normalize() {
+    vector2<component_type> &vector2<component_type>::normalize() requires std::floating_point<component_type> {
         if (is_effectively_zero()) {
             *this = vector2::zero;
 
@@ -79,7 +79,7 @@ namespace gdk {
 
     template<arithmetic_component component_type>
     component_type vector2<component_type>::angle_between(
-        const vector2<component_type> &that) const {
+        const vector2<component_type> &that) const requires std::floating_point<component_type> {
         const auto lengths = std::sqrt(length_squared() * that.length_squared());
 
         if (lengths <= static_cast<component_type>(0)) return static_cast<component_type>(0);
@@ -135,7 +135,7 @@ namespace gdk {
 
     template<arithmetic_component component_type>
     constexpr vector2<component_type> vector2<component_type>::operator-() const {
-        return {-x, -y};
+        return {static_cast<component_type>(-x), static_cast<component_type>(-y)};
     }
 
     template<arithmetic_component component_type>

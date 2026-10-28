@@ -1,6 +1,8 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
@@ -9,7 +11,7 @@
 #include <stdexcept>
 #include <utility>
 
-using namespace gdk;
+using namespace gdk::math;
 
 namespace {
     template<typename T>
@@ -23,8 +25,6 @@ namespace {
 
 TEMPLATE_LIST_TEST_CASE("gdk-math: vector2 and vector3 agree on shared measurements", "[parity]", type::floating_point)
 {
-    using vec2 = vector2<TestType>;
-    using vec3 = vector3<TestType>;
 
     const pair2d<TestType> a(3, 4);
     const pair2d<TestType> b(-1.5f, 2.25f);
@@ -185,10 +185,9 @@ TEMPLATE_LIST_TEST_CASE("gdk-math: vector2 and vector3 fail the same way", "[par
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::vector2 operations added for parity with vector3", "[vector2]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::vector2 operations added for parity with vector3", "[vector2]", type::floating_point)
 {
     using vec2 = vector2<TestType>;
-    using vec3 = vector3<TestType>;
 
     SECTION("unary minus negates both components")
     {
@@ -227,10 +226,9 @@ TEMPLATE_LIST_TEST_CASE("gdk::vector2 operations added for parity with vector3",
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::vector2 has no precision_type parameter", "[vector2]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::vector2 has no precision_type parameter", "[vector2]", type::floating_point)
 {
     using vec2 = vector2<TestType>;
-    using vec3 = vector3<TestType>;
 
     const vec2 v(3, 4);
 

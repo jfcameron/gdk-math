@@ -1,6 +1,8 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
@@ -8,7 +10,7 @@
 #include <cstddef>
 #include <type_traits>
 
-using namespace gdk;
+using namespace gdk::math;
 
 TEMPLATE_LIST_TEST_CASE("gdk-math std backend: layout is unchanged by the storage split", "[layout]", type::floating_point)
 {
@@ -18,6 +20,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math std backend: layout is unchanged by the storag
         REQUIRE(sizeof(vector3<TestType>) == 3 * sizeof(TestType));
         REQUIRE(sizeof(vector4<TestType>) == 4 * sizeof(TestType));
         REQUIRE(sizeof(quaternion<TestType>) == 4 * sizeof(TestType));
+        REQUIRE(sizeof(matrix3x3<TestType>) == 9 * sizeof(TestType));
         REQUIRE(sizeof(matrix4x4<TestType>) == 16 * sizeof(TestType));
     }
 
@@ -27,6 +30,7 @@ TEMPLATE_LIST_TEST_CASE("gdk-math std backend: layout is unchanged by the storag
         REQUIRE(std::is_standard_layout<vector3<TestType>>::value);
         REQUIRE(std::is_standard_layout<vector4<TestType>>::value);
         REQUIRE(std::is_standard_layout<quaternion<TestType>>::value);
+        REQUIRE(std::is_standard_layout<matrix3x3<TestType>>::value);
         REQUIRE(std::is_standard_layout<matrix4x4<TestType>>::value);
 
         REQUIRE(std::is_trivially_copyable<vector3<TestType>>::value);

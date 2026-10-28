@@ -1,6 +1,8 @@
-// © Joseph Cameron - All Rights Reserved
+// © Joseph Cameron - MIT License
 
 #include <jfc/catch.hpp>
+
+#include "string_makers.h"
 #include <jfc/types.h>
 
 #include <gdk/math.h>
@@ -8,7 +10,7 @@
 #include <cmath>
 #include <stdexcept>
 
-using namespace gdk;
+using namespace gdk::math;
 
 namespace {
     constexpr float QUARTER_TURN = to_radians(90.0f);
@@ -28,12 +30,9 @@ namespace {
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::matrix3x3 storage and construction", "[mat3x3]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::matrix3x3 storage and construction", "[mat3x3]", type::floating_point)
 {
     using mat3 = matrix3x3<TestType>;
-    using mat4 = matrix4x4<TestType>;
-    using vec = vector3<TestType>;
-    using quat = quaternion<TestType>;
 
     SECTION("the default is the identity")
     {
@@ -78,7 +77,7 @@ TEMPLATE_LIST_TEST_CASE("gdk::matrix3x3 storage and construction", "[mat3x3]", t
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::matrix3x3 arithmetic", "[mat3x3]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::matrix3x3 arithmetic", "[mat3x3]", type::floating_point)
 {
     using mat3 = matrix3x3<TestType>;
     using mat4 = matrix4x4<TestType>;
@@ -149,7 +148,7 @@ TEMPLATE_LIST_TEST_CASE("gdk::matrix3x3 arithmetic", "[mat3x3]", type::floating_
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::upper_left", "[mat3x3][math_ops]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::upper_left", "[mat3x3][math_ops]", type::floating_point)
 {
     using mat3 = matrix3x3<TestType>;
     using mat4 = matrix4x4<TestType>;
@@ -183,9 +182,8 @@ TEMPLATE_LIST_TEST_CASE("gdk::upper_left", "[mat3x3][math_ops]", type::floating_
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::normal_matrix", "[mat3x3][math_ops]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::normal_matrix", "[mat3x3][math_ops]", type::floating_point)
 {
-    using mat3 = matrix3x3<TestType>;
     using mat4 = matrix4x4<TestType>;
     using vec = vector3<TestType>;
     using quat = quaternion<TestType>;
@@ -228,12 +226,9 @@ TEMPLATE_LIST_TEST_CASE("gdk::normal_matrix", "[mat3x3][math_ops]", type::floati
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("gdk::matrix3x3 storage layout", "[mat3x3][layout]", type::floating_point)
+TEMPLATE_LIST_TEST_CASE("gdk::math::matrix3x3 storage layout", "[mat3x3][layout]", type::floating_point)
 {
     using mat3 = matrix3x3<TestType>;
-    using mat4 = matrix4x4<TestType>;
-    using vec = vector3<TestType>;
-    using quat = quaternion<TestType>;
 
     REQUIRE(sizeof(mat3) == 9 * sizeof(TestType));
     REQUIRE(std::is_standard_layout<mat3>::value);
