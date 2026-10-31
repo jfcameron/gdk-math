@@ -143,5 +143,13 @@ if (GDKMATH_BUILD_BENCH)
 endif()
 
 if (GDKMATH_BUILD_DOCS)
-    add_subdirectory(docs)
+    jfc_generate_documentation_doxygen(
+        PROJECT_LOGO     ${CMAKE_CURRENT_LIST_DIR}/docs/icon.png
+
+        README_PATH      README.md
+        OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/docs
+
+        INCLUDE_DIRECTORIES
+            include/
+    )
 endif()
